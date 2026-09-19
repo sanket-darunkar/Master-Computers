@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-sans text-gray-800 bg-white antialiased;
+  }
+
+  /* Marathi / Devanagari text */
+  .font-marathi,
+  [lang="mr"] {
+    font-family: 'Noto Sans Devanagari', 'Noto Sans', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans font-bold leading-tight;
+  }
+
+  /* Smooth focus ring */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary-600 ring-offset-2 rounded;
+  }
+}
+
+@layer components {
+  /* ── Buttons ──────────────────────────────────────────── */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-semibold rounded-xl
+           transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2
+           disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary-700 text-white hover:bg-primary-800 active:bg-primary-900
+           focus-visible:ring-primary-600 shadow-md hover:shadow-lg;
+  }
+
+  .btn-accent {
+    @apply btn bg-accent-500 text-white hover:bg-accent-600 active:bg-accent-700
+           focus-visible:ring-accent-500 shadow-md hover:shadow-lg;
+  }
+
+  .btn-whatsapp {
+    @apply btn bg-[#25D366] text-white hover:bg-[#1ebe5c] active:bg-[#17a84f]
+           focus-visible:ring-[#25D366] shadow-md hover:shadow-lg;
+  }
+
+  .btn-outline {
+    @apply btn border-2 border-primary-700 text-primary-700 bg-white
+           hover:bg-primary-50 focus-visible:ring-primary-600;
+  }
+
+  .btn-outline-white {
+    @apply btn border-2 border-white text-white bg-transparent
+           hover:bg-white hover:text-primary-800 focus-visible:ring-white;
+  }
+
+  .btn-sm  { @apply text-sm px-4 py-2; }
+  .btn-md  { @apply text-base px-6 py-3; }
+  .btn-lg  { @apply text-lg px-8 py-4; }
+
+  /* ── Cards ────────────────────────────────────────────── */
+  .card {
+    @apply bg-white rounded-2xl shadow-card border border-gray-100
+           transition-all duration-200 hover:shadow-card-hover hover:-translate-y-0.5;
+  }
+
+  /* ── Section wrappers ─────────────────────────────────── */
+  .section-padding {
+    @apply py-16 md:py-20 lg:py-24;
+  }
+
+  .container-main {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* ── Section headings ─────────────────────────────────── */
+  .section-label {
+    @apply inline-block text-sm font-semibold text-primary-600 bg-primary-50
+           px-3 py-1 rounded-full mb-3 tracking-wide uppercase;
+  }
+
+  .section-title {
+    @apply text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 leading-tight;
+  }
+
+  .section-subtitle {
+    @apply text-base sm:text-lg text-gray-600 mt-3 max-w-2xl;
+  }
+
+  /* ── Gradient backgrounds ─────────────────────────────── */
+  .bg-hero-gradient {
+    background: linear-gradient(135deg, #1e2f6e 0%, #2d4499 50%, #1e3a8a 100%);
+  }
+
+  .bg-section-alt {
+    @apply bg-gray-50;
+  }
+}
+
+@layer utilities {
+  /* Devanagari / Marathi font utility */
+  .font-devanagari {
+    font-family: 'Noto Sans Devanagari', 'Noto Sans', sans-serif;
+    font-feature-settings: 'kern' 1;
+  }
+
+  /* Animation delay utilities */
+  .delay-100 { animation-delay: 100ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-400 { animation-delay: 400ms; }
+  .delay-500 { animation-delay: 500ms; }
+
+  /* Opacity initially 0 for animated elements */
+  .animate-on-enter {
+    opacity: 0;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-600 to-accent-500 bg-clip-text text-transparent;
+  }
+}
