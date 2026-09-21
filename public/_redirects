@@ -1,0 +1,4 @@
+# Netlify SPA fallback — all routes serve index.html
+# The React app's client-side router then handles the path.
+# API requests must NOT be caught by this rule — they go to the backend.
+/*    /index.html    200

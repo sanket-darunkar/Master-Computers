@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /admin/
 
-Sitemap: https://mastercomputeracademy.in/sitemap.xml
+Sitemap: https://mastercomputeracademy.org/sitemap.xml

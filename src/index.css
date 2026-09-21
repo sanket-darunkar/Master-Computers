@@ -126,3 +126,67 @@
     @apply bg-gradient-to-r from-primary-600 to-accent-500 bg-clip-text text-transparent;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   PRINT STYLES — Certificate Verification report
+   Only the #cert-print-area is printed cleanly.
+───────────────────────────────────────────────────────────── */
+@media print {
+  /* Hide everything by default */
+  body > * { display: none !important; }
+
+  /* Show only the main content wrapper */
+  #main-content { display: block !important; }
+
+  /* Within main, hide everything except the print area */
+  #main-content > * { display: none !important; }
+
+  /* The cert page div itself */
+  #main-content .min-h-screen { display: block !important; }
+  #main-content .min-h-screen > * { display: none !important; }
+
+  /* Only the printable card */
+  #cert-print-area { display: block !important; }
+
+  /* Reset page */
+  @page {
+    margin: 16mm 14mm;
+    size: A4 portrait;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+  }
+
+  #cert-print-area {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  /* Keep branding strip readable */
+  #cert-print-area .bg-hero-gradient {
+    background: #1e2f6e !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Ensure status badge colours print */
+  .bg-green-100, .bg-red-100, .bg-yellow-100 {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Remove hover effects */
+  * { transition: none !important; }
+
+  /* Force all text visible */
+  .text-gray-400, .text-gray-500 { color: #555 !important; }
+  .text-gray-600 { color: #444 !important; }
+  .text-gray-900 { color: #111 !important; }
+}

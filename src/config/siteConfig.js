@@ -450,12 +450,78 @@ export const REVIEWS = [
 ];
 
 // ── Gallery images ─────────────────────────────────────────
-// Replace src values with real academy photos.
 export const GALLERY_ITEMS = [
-  { id: 1, category: 'classroom', alt: 'Computer Lab – Master Computer Academy', src: '' },
-  { id: 2, category: 'classroom', alt: 'Classroom at Master Computer Academy Wathoda', src: '' },
-  { id: 3, category: 'students',  alt: 'Students learning MS-CIT', src: '' },
-  { id: 4, category: 'students',  alt: 'Students in practical session', src: '' },
-  { id: 5, category: 'activity',  alt: 'Academy activity / event', src: '' },
-  { id: 6, category: 'activity',  alt: 'Certificate distribution ceremony', src: '' },
+  // ── Students in lab ──────────────────────────────────────
+  {
+    id: 1,
+    category: 'students',
+    alt: 'Students learning on computers – Master Computer Academy',
+    src: '/images/WhatsApp Image 2026-09-19 at 19.55.27 (1).jpeg',
+  },
+  {
+    id: 2,
+    category: 'students',
+    alt: 'Practical computer session – students at Master Computer Academy',
+    src: '/images/WhatsApp Image 2026-09-19 at 19.55.29.jpeg',
+  },
+
+  // ── Classroom / Lab interiors ─────────────────────────────
+  {
+    id: 3,
+    category: 'classroom',
+    alt: 'Computer lab interior – Master Computer Academy Wathoda',
+    src: '/images/WhatsApp Image 2026-09-19 at 19.55.28.jpeg',
+  },
+
+  // ── Academy exterior / building ───────────────────────────
+  {
+    id: 4,
+    category: 'classroom',
+    alt: 'Master Computer Academy building signboard – Wathoda Layout, Nagpur',
+    src: '/images/WhatsApp Image 2026-09-19 at 19.55.27.jpeg',
+  },
+  {
+    id: 5,
+    category: 'classroom',
+    alt: 'Academy entrance with MS-CIT course posters',
+    src: '/images/WhatsApp Image 2026-09-19 at 19.55.48.jpeg',
+  },
+  {
+    id: 6,
+    category: 'classroom',
+    alt: 'Academy entrance corridor with DTP sign and MS-CIT banners',
+    src: '/images/WhatsApp Image 2026-09-19 at 19.55.35.jpeg',
+  },
+  {
+    id: 7,
+    category: 'classroom',
+    alt: 'MS-CIT entrance door stickers – Master Computer Academy',
+    src: '/images/WhatsApp Image 2026-09-19 at 19.55.33.jpeg',
+  },
+  {
+    id: 8,
+    category: 'classroom',
+    alt: 'Academy side view with MS-CIT vertical banner',
+    src: '/images/WhatsApp Image 2026-09-19 at 19.55.33 (2).jpeg',
+  },
+  {
+    id: 9,
+    category: 'classroom',
+    alt: 'Exterior corridor – DTP centre and MS-CIT posters',
+    src: '/images/WhatsApp Image 2026-09-19 at 19.55.33 (1).jpeg',
+  },
+
+  // ── Academy activities / highlights ───────────────────────
+  {
+    id: 10,
+    category: 'activity',
+    alt: 'MS-CIT and KLiC Diploma course poster – Master Computer Academy',
+    src: '/images/WhatsApp Image 2026-09-19 at 19.55.34.jpeg',
+  },
+  {
+    id: 11,
+    category: 'activity',
+    alt: 'Academy office with Best Teacher Award certificates on display',
+    src: '/images/WhatsApp Image 2026-09-19 at 19.55.35 (1).jpeg',
+  },
 ];

@@ -5,20 +5,30 @@ import {
 } from '../../config/siteConfig';
 
 const QUICK_LINKS = [
-  { label: 'Home',     href: '#home' },
-  { label: 'MS-CIT',  href: '#mscit' },
-  { label: 'Courses', href: '#courses' },
-  { label: 'About',   href: '#about' },
-  { label: 'Why Us',  href: '#why-us' },
-  { label: 'Reviews', href: '#reviews' },
-  { label: 'Gallery', href: '#gallery' },
-  { label: 'Contact', href: '#contact' },
+  { label: 'Home',                  href: '#home',    page: null },
+  { label: 'MS-CIT',               href: '#mscit',   page: null },
+  { label: 'Courses',              href: '#courses', page: null },
+  { label: 'About',                href: '#about',   page: null },
+  { label: 'Why Us',               href: '#why-us',  page: null },
+  { label: 'Reviews',              href: '#reviews', page: null },
+  { label: 'Gallery',              href: '#gallery', page: null },
+  { label: 'Contact',              href: '#contact', page: null },
+  { label: '🔍 Verify Certificate', href: '/?page=certificate-verification', page: 'certificate-verification' },
 ];
 
-function handleNavClick(e, href) {
+function handleNavClick(e, link) {
   e.preventDefault();
-  const el = document.querySelector(href);
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (link.page) {
+    window.__mcaNavigate?.(link.page);
+  } else {
+    // If already on home, scroll; otherwise navigate home first
+    const el = document.querySelector(link.href);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.__mcaNavigate?.('home');
+    }
+  }
 }
 
 export default function Footer() {
@@ -26,7 +36,7 @@ export default function Footer() {
   const featuredCourses = COURSES.slice(0, 6);
 
   return (
-    <footer className="bg-gray-900 text-gray-300" role="contentinfo">
+    <footer className="bg-gray-900 text-gray-300 print:hidden" role="contentinfo">
       <div className="container-main py-14">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
 
@@ -104,7 +114,7 @@ export default function Footer() {
                 <li key={link.href}>
                   <a
                     href={link.href}
-                    onClick={e => handleNavClick(e, link.href)}
+                    onClick={e => handleNavClick(e, link)}
                     className="text-gray-400 hover:text-white text-sm transition-colors duration-150
                                focus-visible:ring-1 focus-visible:ring-primary-500 rounded"
                   >

@@ -31,18 +31,29 @@ const CloseIcon = () => (
   </svg>
 );
 
-export default function Navbar() {
-  const [menuOpen, setMenuOpen]   = useState(false);
-  const [scrolled, setScrolled]   = useState(false);
+const CertIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+    <polyline points="14 2 14 8 20 8"/>
+    <line x1="16" y1="13" x2="8" y2="13"/>
+    <line x1="16" y1="17" x2="8" y2="17"/>
+  </svg>
+);
+
+export default function Navbar({ currentPage = 'home' }) {
+  const [menuOpen, setMenuOpen]    = useState(false);
+  const [scrolled, setScrolled]    = useState(false);
   const [activeSection, setActive] = useState('home');
 
-  const closeMenu = useCallback(() => setMenuOpen(false), []);
+  const isCertPage = currentPage === 'certificate-verification';
+  const closeMenu  = useCallback(() => setMenuOpen(false), []);
 
+  // ── Scroll / active section tracking (home page only) ───────
   useEffect(() => {
+    if (isCertPage) return;
     const onScroll = () => {
       setScrolled(window.scrollY > 20);
-
-      // Highlight active nav link based on scroll position
       const sections = NAV_LINKS.map(l => l.href.replace('#', ''));
       for (let i = sections.length - 1; i >= 0; i--) {
         const el = document.getElementById(sections[i]);
@@ -54,42 +65,72 @@ export default function Navbar() {
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [isCertPage]);
 
-  // Close menu on resize to desktop
+  // Scroll shadow also applies on cert page
+  useEffect(() => {
+    if (!isCertPage) return;
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [isCertPage]);
+
+  // Close menu on desktop resize
   useEffect(() => {
     const onResize = () => { if (window.innerWidth >= 1024) closeMenu(); };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, [closeMenu]);
 
-  // Prevent body scroll when menu open
+  // Lock body scroll while mobile menu is open
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
 
-  const handleNavClick = (e, href) => {
+  // ── Navigation helpers ────────────────────────────────────
+  const handleSectionClick = (e, href) => {
     e.preventDefault();
     closeMenu();
-    const target = document.querySelector(href);
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (isCertPage) {
+      // Navigate back to home first, then let hash scroll happen
+      window.__mcaNavigate?.('home');
+      setTimeout(() => {
+        const el = document.querySelector(href);
+        el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    } else {
+      const el = document.querySelector(href);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const goHome = (e) => {
+    e.preventDefault();
+    closeMenu();
+    window.__mcaNavigate?.('home');
+  };
+
+  const goCertPage = (e) => {
+    e.preventDefault();
+    closeMenu();
+    window.__mcaNavigate?.('certificate-verification');
   };
 
   return (
     <>
       <header
         role="banner"
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 print:hidden
           ${scrolled ? 'bg-white/95 backdrop-blur-md shadow-md' : 'bg-white/90 backdrop-blur-sm shadow-sm'}`}
       >
         <div className="container-main">
-          <div className="flex items-center justify-between h-16 md:h-18">
+          <div className="flex items-center justify-between h-16">
 
-            {/* Logo */}
+            {/* Logo — always goes home */}
             <a
-              href="#home"
-              onClick={e => handleNavClick(e, '#home')}
+              href="/"
+              onClick={goHome}
               className="flex items-center flex-shrink-0 focus-visible:ring-2 focus-visible:ring-primary-600 rounded-lg p-1"
               aria-label={`${ACADEMY_NAME} – Home`}
             >
@@ -109,18 +150,35 @@ export default function Navbar() {
               {NAV_LINKS.map(link => (
                 <a
                   key={link.href}
-                  href={link.href}
-                  onClick={e => handleNavClick(e, link.href)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-primary-600
-                    ${activeSection === link.href.replace('#', '')
+                  href={isCertPage ? '/' : link.href}
+                  onClick={e => handleSectionClick(e, link.href)}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150
+                              focus-visible:ring-2 focus-visible:ring-primary-600
+                    ${!isCertPage && activeSection === link.href.replace('#', '')
                       ? 'text-primary-700 bg-primary-50'
                       : 'text-gray-600 hover:text-primary-700 hover:bg-primary-50'
                     }`}
-                  aria-current={activeSection === link.href.replace('#', '') ? 'page' : undefined}
+                  aria-current={!isCertPage && activeSection === link.href.replace('#', '') ? 'page' : undefined}
                 >
                   {link.label}
                 </a>
               ))}
+
+              {/* Certificate Verification link */}
+              <a
+                href="/?page=certificate-verification"
+                onClick={goCertPage}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150
+                            focus-visible:ring-2 focus-visible:ring-primary-600 flex items-center gap-1.5
+                  ${isCertPage
+                    ? 'text-primary-700 bg-primary-50'
+                    : 'text-gray-600 hover:text-primary-700 hover:bg-primary-50'
+                  }`}
+                aria-current={isCertPage ? 'page' : undefined}
+              >
+                <CertIcon />
+                Verify Certificate
+              </a>
             </nav>
 
             {/* Desktop CTAs */}
@@ -130,8 +188,12 @@ export default function Navbar() {
                 className="btn-outline btn-sm"
                 aria-label="Call Master Computer Academy"
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.03 2.18 2 2 0 012 0h3a2 2 0 012 1.72 12.05 12.05 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.05 12.05 0 002.81.7A2 2 0 0122 16.92z"/>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8
+                           19.79 19.79 0 01.03 2.18 2 2 0 012 0h3a2 2 0 012 1.72 12.05 12.05 0 00.7 2.81
+                           2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45
+                           12.05 12.05 0 002.81.7A2 2 0 0122 16.92z"/>
                 </svg>
                 Call Now
               </a>
@@ -140,7 +202,7 @@ export default function Navbar() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-primary btn-sm font-devanagari"
-                aria-label="Enquire about MS-CIT admission on WhatsApp"
+                aria-label="Enquire about MS-CIT on WhatsApp"
               >
                 Enquire Now
               </a>
@@ -149,7 +211,8 @@ export default function Navbar() {
             {/* Mobile hamburger */}
             <button
               onClick={() => setMenuOpen(prev => !prev)}
-              className="lg:hidden p-2 rounded-xl text-gray-700 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-primary-600 transition-colors"
+              className="lg:hidden p-2 rounded-xl text-gray-700 hover:bg-gray-100
+                         focus-visible:ring-2 focus-visible:ring-primary-600 transition-colors"
               aria-expanded={menuOpen}
               aria-controls="mobile-menu"
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
@@ -160,50 +223,32 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* Mobile menu overlay */}
+      {/* ── Mobile menu overlay ── */}
       <div
         id="mobile-menu"
         role="dialog"
         aria-modal="true"
         aria-label="Navigation menu"
-        className={`lg:hidden fixed inset-0 z-40 transition-all duration-300
+        className={`lg:hidden fixed inset-0 z-40 transition-all duration-300 print:hidden
           ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
       >
-        {/* Backdrop */}
-        <div
-          className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-          onClick={closeMenu}
-          aria-hidden="true"
-        />
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeMenu} aria-hidden="true" />
 
-        {/* Drawer */}
-        <div
-          className={`absolute top-0 right-0 h-full w-72 bg-white shadow-2xl
-            flex flex-col transition-transform duration-300
-            ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        <div className={`absolute top-0 right-0 h-full w-72 bg-white shadow-2xl
+          flex flex-col transition-transform duration-300
+          ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}
         >
           {/* Drawer header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-100">
-            <a
-              href="#home"
-              onClick={e => { handleNavClick(e, '#home'); closeMenu(); }}
+            <a href="/" onClick={goHome}
               className="focus-visible:ring-2 focus-visible:ring-primary-600 rounded"
-              aria-label={`${ACADEMY_NAME} – Home`}
-            >
-              <img
-                src={LOGO_SRC}
-                alt={`${ACADEMY_NAME} logo`}
-                className="h-9 w-auto object-contain"
-                width="239"
-                height="90"
-                loading="eager"
-              />
+              aria-label={`${ACADEMY_NAME} – Home`}>
+              <img src={LOGO_SRC} alt={`${ACADEMY_NAME} logo`}
+                className="h-9 w-auto object-contain" width="239" height="90" loading="eager" />
             </a>
-            <button
-              onClick={closeMenu}
+            <button onClick={closeMenu}
               className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-primary-600"
-              aria-label="Close menu"
-            >
+              aria-label="Close menu">
               <CloseIcon />
             </button>
           </div>
@@ -213,11 +258,11 @@ export default function Navbar() {
             {NAV_LINKS.map((link, i) => (
               <a
                 key={link.href}
-                href={link.href}
-                onClick={e => handleNavClick(e, link.href)}
+                href={isCertPage ? '/' : link.href}
+                onClick={e => handleSectionClick(e, link.href)}
                 className={`flex items-center px-4 py-3 rounded-xl text-base font-medium
                   transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-primary-600 mb-1
-                  ${activeSection === link.href.replace('#', '')
+                  ${!isCertPage && activeSection === link.href.replace('#', '')
                     ? 'bg-primary-50 text-primary-700'
                     : 'text-gray-700 hover:bg-gray-50'
                   }`}
@@ -226,6 +271,18 @@ export default function Navbar() {
                 {link.label}
               </a>
             ))}
+
+            {/* Certificate Verification in mobile menu */}
+            <a
+              href="/?page=certificate-verification"
+              onClick={goCertPage}
+              className={`flex items-center gap-2 px-4 py-3 rounded-xl text-base font-medium
+                transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-primary-600 mb-1
+                ${isCertPage ? 'bg-primary-50 text-primary-700' : 'text-gray-700 hover:bg-gray-50'}`}
+            >
+              <CertIcon />
+              Verify Certificate
+            </a>
           </nav>
 
           {/* Mobile CTAs */}
@@ -243,11 +300,7 @@ export default function Navbar() {
               </svg>
               MS-CIT Enquiry
             </a>
-            <a
-              href={callLink()}
-              className="btn-outline btn-md w-full justify-center"
-              onClick={closeMenu}
-            >
+            <a href={callLink()} className="btn-outline btn-md w-full justify-center" onClick={closeMenu}>
               Call Now
             </a>
           </div>
@@ -255,7 +308,7 @@ export default function Navbar() {
       </div>
 
       {/* Spacer for fixed navbar */}
-      <div className="h-16 md:h-18" aria-hidden="true" />
+      <div className="h-16 print:hidden" aria-hidden="true" />
     </>
   );
 }

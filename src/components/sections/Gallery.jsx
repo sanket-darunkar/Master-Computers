@@ -65,8 +65,6 @@ export default function Gallery() {
     ? GALLERY_ITEMS
     : GALLERY_ITEMS.filter(i => i.category === activeCategory);
 
-  const noRealPhotos = GALLERY_ITEMS.every(i => !i.src);
-
   return (
     <SectionWrapper id="gallery" bg="alt">
       <SectionHeading
@@ -75,17 +73,6 @@ export default function Gallery() {
         subtitle="Master Computer Academy — Wathoda, Nagpur मधील learning environment."
         center
       />
-
-      {/* Owner notice */}
-      {noRealPhotos && (
-        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-2xl p-4 text-center">
-          <p className="text-blue-800 text-sm font-devanagari">
-            <strong>Note for owner:</strong> खालील placeholders आहेत.
-            Real photos <code className="text-xs">src/config/siteConfig.js</code> मधील
-            <code className="text-xs"> GALLERY_ITEMS</code> array मध्ये <code className="text-xs">src</code> field update करा.
-          </p>
-        </div>
-      )}
 
       {/* Category filter */}
       <div className="flex flex-wrap gap-2 mb-8 justify-center" role="group" aria-label="Filter gallery by category">
@@ -113,7 +100,6 @@ export default function Gallery() {
         ))}
       </div>
 
-      {/* CTA to share photos */}
       <p className="text-center text-gray-500 text-sm font-devanagari mt-8">
         Academy च्या photos आणि events साठी आमच्याशी connected राहा. 📸
       </p>
