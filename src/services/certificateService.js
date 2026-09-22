@@ -17,7 +17,12 @@
  *   data     : {
  *     certificateNumber : string,
  *     studentName       : string,
- *     studentPhotoUrl   : string | null,
+ *     // Photo — one of the following will be present (not both):
+ *     photoData         : string | null,  // Base64-encoded bytes of the uploaded photo
+ *     photoMimeType     : string | null,  // e.g. "image/jpeg" — set when photoData is present
+ *     studentPhotoUrl   : string | null,  // Legacy URL (only on old certificates)
+ *     // Construct image src as:
+ *     //   photoData ? `data:${photoMimeType};base64,${photoData}` : studentPhotoUrl
  *     courseName        : string,
  *     issueDate         : string  (YYYY-MM-DD),
  *     duration          : string | null,

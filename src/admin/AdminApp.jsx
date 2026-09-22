@@ -29,6 +29,10 @@ import AdminCertList       from './pages/AdminCertList';
 import AdminCertNew        from './pages/AdminCertNew';
 import AdminCertDetail     from './pages/AdminCertDetail';
 import AdminCertEdit       from './pages/AdminCertEdit';
+import AdminStudentList    from './pages/AdminStudentList';
+import AdminStudentNew     from './pages/AdminStudentNew';
+import AdminStudentDetail  from './pages/AdminStudentDetail';
+import AdminStudentEdit    from './pages/AdminStudentEdit';
 
 // ── Path parser ───────────────────────────────────────────────
 // Returns a route descriptor from window.location.pathname.
@@ -56,6 +60,12 @@ function parseAdminPath(pathname) {
     if (segments[1] === 'new')                              return { route: 'cert-new' };
     if (segments[2] === 'edit')  return { route: 'cert-edit',   id: segments[1] };
     return { route: 'cert-detail', id: segments[1] };
+  }
+  if (segments[0] === 'students') {
+    if (!segments[1])                                       return { route: 'stu-list' };
+    if (segments[1] === 'new')                              return { route: 'stu-new' };
+    if (segments[2] === 'edit')   return { route: 'stu-edit',   id: segments[1] };
+    return { route: 'stu-detail', id: segments[1] };
   }
   return { route: 'dashboard' };
 }
@@ -109,6 +119,10 @@ function AdminRouter() {
     case 'cert-new':    return <AdminCertNew />;
     case 'cert-detail': return <AdminCertDetail id={location.id} />;
     case 'cert-edit':   return <AdminCertEdit   id={location.id} />;
+    case 'stu-list':    return <AdminStudentList />;
+    case 'stu-new':     return <AdminStudentNew />;
+    case 'stu-detail':  return <AdminStudentDetail id={location.id} />;
+    case 'stu-edit':    return <AdminStudentEdit   id={location.id} />;
     default:            return <AdminDashboard />;
   }
 }

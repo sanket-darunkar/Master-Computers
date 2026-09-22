@@ -33,11 +33,11 @@ export default function AdminCertEdit({ id }) {
 
   useEffect(() => { load(); }, [load]);
 
-  const handleSubmit = async (data) => {
+  const handleSubmit = async (data, photoFile) => {
     setSubmitting(true);
     setServerError('');
     try {
-      const updated = await updateCertificate(id, data);
+      const updated = await updateCertificate(id, data, photoFile);
       showToast('Certificate updated successfully!', 'success');
       adminNavigate(`/admin/certificates/${updated.id}`);
     } catch (err) {
@@ -70,13 +70,16 @@ export default function AdminCertEdit({ id }) {
   // issueDate from backend comes as YYYY-MM-DD (LocalDate serialised by Jackson)
   const initialValues = {
     studentName    : cert.studentName     ?? '',
-    studentPhotoUrl: cert.studentPhotoUrl ?? '',
     courseName     : cert.courseName      ?? '',
-    issueDate      : cert.issueDate       ?? '',   // already YYYY-MM-DD
+    issueDate      : cert.issueDate       ?? '',
     duration       : cert.duration        ?? '',
     institutionName: cert.institutionName ?? '',
     marks          : cert.marks           ?? '',
     grade          : cert.grade           ?? '',
+    // Photo fields — CertificateForm reads these to show the existing preview
+    photoData      : cert.photoData       ?? null,
+    photoMimeType  : cert.photoMimeType   ?? null,
+    studentPhotoUrl: cert.studentPhotoUrl ?? null,
   };
 
   return (

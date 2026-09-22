@@ -91,7 +91,13 @@ function LoadingState() {
 
 /** ── Valid certificate card ── */
 function ValidCertificate({ cert, onPrint }) {
-  const hasPhoto = Boolean(cert.studentPhotoUrl);
+  // Build the photo src from whichever field is available.
+  // Priority: uploaded binary (photoData + photoMimeType) > legacy URL.
+  const photoSrc = cert.photoData && cert.photoMimeType
+    ? `data:${cert.photoMimeType};base64,${cert.photoData}`
+    : cert.studentPhotoUrl || null;
+
+  const hasPhoto = Boolean(photoSrc);
 
   return (
     <div className="animate-fade-up">
@@ -135,7 +141,7 @@ function ValidCertificate({ cert, onPrint }) {
             <div className="flex-shrink-0">
               {hasPhoto ? (
                 <img
-                  src={cert.studentPhotoUrl}
+                  src={photoSrc}
                   alt={`Photo of ${cert.studentName}`}
                   className="w-24 h-24 rounded-2xl object-cover border-2 border-primary-100 shadow-card"
                   loading="lazy"

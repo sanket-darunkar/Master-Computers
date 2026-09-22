@@ -10,15 +10,14 @@ export default function AdminCertNew() {
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState('');
 
-  const handleSubmit = async (data) => {
+  const handleSubmit = async (data, photoFile) => {
     setSubmitting(true);
     setServerError('');
     try {
-      const cert = await createCertificate(data);
+      const cert = await createCertificate(data, photoFile);
       showToast(`Certificate ${cert.certificateNumber} created successfully!`, 'success');
       adminNavigate(`/admin/certificates/${cert.id}`);
     } catch (err) {
-      // 409 Conflict = duplicate certificate number
       if (err.status === 409) {
         setServerError(`Certificate number "${data.certificateNumber}" already exists. Please use a unique number.`);
       } else {

@@ -190,3 +190,46 @@
   .text-gray-600 { color: #444 !important; }
   .text-gray-900 { color: #111 !important; }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   STUDENT PRINT STYLES
+   Two A4 pages: Page 1 = Admission Form, Page 2 = Exam Form
+   Only #student-print-doc is printed — all admin UI is hidden.
+───────────────────────────────────────────────────────────── */
+@media print {
+  /* If student print doc exists, use its own isolated print rules */
+  body:has(#student-print-doc) > * { display: none !important; }
+  body:has(#student-print-doc) #student-print-doc { display: block !important; }
+
+  #student-print-doc {
+    display: block !important;
+  }
+
+  .print-page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 12mm 14mm;
+    box-sizing: border-box;
+    page-break-after: always;
+    page-break-inside: avoid;
+    background: white !important;
+    font-size: 9pt;
+    font-family: 'Inter', sans-serif;
+    color: #111;
+  }
+
+  .print-page:last-child {
+    page-break-after: auto;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  /* Ensure colours print */
+  .print-page * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

@@ -32,19 +32,8 @@
  * ============================================================
  */
 
-// ── Base URL ──────────────────────────────────────────────────
-// In development the Vite proxy intercepts /api/* and forwards it to the
-// backend, so a relative BASE_URL ('') works fine.
-//
-// In production there is no Vite proxy. The browser must call the backend
-// directly, so we use VITE_API_BASE_URL (e.g. https://api.mastercomputeracademy.org).
-// VITE_API_BASE_URL must be set in the production environment — the build
-// will succeed without it but API calls will fail at runtime.
-//
-// Never put the backend URL as a hardcoded fallback in production code.
-// Set it via your hosting platform's environment variable configuration.
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
-const TIMEOUT_MS  = 15_000;
+const BASE_URL   = import.meta.env.VITE_API_BASE_URL ?? '';
+const TIMEOUT_MS = 30_000; // increased to 30 s to allow photo uploads on slow connections
 
 // ── Storage key ──────────────────────────────────────────────
 export const AUTH_TOKEN_KEY = 'mca_admin_token';
@@ -63,16 +52,14 @@ export class AdminApiError extends Error {
 export function getStoredToken() {
   return sessionStorage.getItem(AUTH_TOKEN_KEY);
 }
-
 export function storeToken(token) {
   sessionStorage.setItem(AUTH_TOKEN_KEY, token);
 }
-
 export function clearToken() {
   sessionStorage.removeItem(AUTH_TOKEN_KEY);
 }
 
-// ── Core fetch wrapper ───────────────────────────────────────
+// ── Core fetch wrapper (JSON) ────────────────────────────────
 async function adminFetch(path, options = {}) {
   const controller = new AbortController();
   const timerId    = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -102,7 +89,6 @@ async function adminFetch(path, options = {}) {
     clearTimeout(timerId);
   }
 
-  // 401 → clear token and signal the app to redirect to login
   if (response.status === 401) {
     clearToken();
     window.dispatchEvent(new CustomEvent('mca:admin:unauthorized'));
@@ -117,7 +103,6 @@ async function adminFetch(path, options = {}) {
   }
 
   if (!response.ok) {
-    // Spring returns { success: false, message: '...' }
     throw new AdminApiError(
       response.status,
       body?.message || `Request failed (${response.status}).`,
@@ -125,7 +110,66 @@ async function adminFetch(path, options = {}) {
     );
   }
 
-  return body; // full ApiResponse envelope
+  return body;
+}
+
+// ── Multipart fetch wrapper (FormData) ───────────────────────
+/**
+ * Like adminFetch but for multipart/form-data requests.
+ * Do NOT set Content-Type — the browser sets it automatically
+ * with the correct boundary when sending FormData.
+ */
+async function adminFetchMultipart(path, method, formData) {
+  const controller = new AbortController();
+  const timerId    = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  const token = getStoredToken();
+  const headers = {
+    'Accept': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    // Content-Type intentionally omitted — browser handles multipart boundary
+  };
+
+  let response;
+  try {
+    response = await fetch(`${BASE_URL}${path}`, {
+      method,
+      headers,
+      body   : formData,
+      signal : controller.signal,
+    });
+  } catch (err) {
+    clearTimeout(timerId);
+    if (err.name === 'AbortError') {
+      throw new AdminApiError(0, 'Request timed out. Please try again.');
+    }
+    throw new AdminApiError(0, 'Cannot connect to server. Please check your connection.');
+  } finally {
+    clearTimeout(timerId);
+  }
+
+  if (response.status === 401) {
+    clearToken();
+    window.dispatchEvent(new CustomEvent('mca:admin:unauthorized'));
+    throw new AdminApiError(401, 'Session expired. Please log in again.');
+  }
+
+  let body;
+  try {
+    body = await response.json();
+  } catch {
+    throw new AdminApiError(response.status, 'Server returned an unreadable response.');
+  }
+
+  if (!response.ok) {
+    throw new AdminApiError(
+      response.status,
+      body?.message || `Request failed (${response.status}).`,
+      body
+    );
+  }
+
+  return body;
 }
 
 // ── Auth ─────────────────────────────────────────────────────
@@ -139,15 +183,13 @@ export async function adminLogin(email, password) {
     method : 'POST',
     body   : JSON.stringify({ email, password }),
   });
-  return res.data; // { token, tokenType }
+  return res.data;
 }
 
 // ── Certificates ─────────────────────────────────────────────
 
 /**
  * GET /api/admin/certificates
- * Params: { page=0, size=10, search='', status='', course='' }
- * Returns: PagedResponse<CertificateResponse>
  */
 export async function listCertificates({ page = 0, size = 10, search = '', status = '', course = '' } = {}) {
   const params = new URLSearchParams({ page, size });
@@ -155,12 +197,11 @@ export async function listCertificates({ page = 0, size = 10, search = '', statu
   if (status)  params.set('status', status);
   if (course)  params.set('course', course);
   const res = await adminFetch(`/api/admin/certificates?${params}`);
-  return res.data; // PagedResponse
+  return res.data;
 }
 
 /**
  * GET /api/admin/certificates/{id}
- * Returns: CertificateResponse
  */
 export async function getCertificate(id) {
   const res = await adminFetch(`/api/admin/certificates/${id}`);
@@ -168,35 +209,59 @@ export async function getCertificate(id) {
 }
 
 /**
- * POST /api/admin/certificates
- * Body: CreateCertificateRequest
- * Returns: CertificateResponse
+ * POST /api/admin/certificates  (multipart/form-data)
+ *
+ * @param {object}  data  – certificate text fields matching CreateCertificateRequest
+ * @param {File|null} photoFile – optional JPG/PNG File object (max 2 MB)
+ *
+ * The backend expects two multipart parts:
+ *   "data"  – JSON blob (application/json)
+ *   "photo" – optional image file
  */
-export async function createCertificate(data) {
-  const res = await adminFetch('/api/admin/certificates', {
-    method : 'POST',
-    body   : JSON.stringify(data),
-  });
+export async function createCertificate(data, photoFile = null) {
+  const formData = new FormData();
+
+  // "data" part: serialize the text fields as JSON with explicit content type
+  formData.append(
+    'data',
+    new Blob([JSON.stringify(data)], { type: 'application/json' })
+  );
+
+  // "photo" part: only append when a file is actually selected
+  if (photoFile) {
+    formData.append('photo', photoFile);
+  }
+
+  const res = await adminFetchMultipart('/api/admin/certificates', 'POST', formData);
   return res.data;
 }
 
 /**
- * PUT /api/admin/certificates/{id}
- * Body: UpdateCertificateRequest (no certificateNumber field)
- * Returns: CertificateResponse
+ * PUT /api/admin/certificates/{id}  (multipart/form-data)
+ *
+ * @param {number}    id        – certificate database ID
+ * @param {object}    data      – text fields matching UpdateCertificateRequest
+ *                                Set data.removePhoto = true to clear existing photo.
+ * @param {File|null} photoFile – optional replacement photo (null = no change)
  */
-export async function updateCertificate(id, data) {
-  const res = await adminFetch(`/api/admin/certificates/${id}`, {
-    method : 'PUT',
-    body   : JSON.stringify(data),
-  });
+export async function updateCertificate(id, data, photoFile = null) {
+  const formData = new FormData();
+
+  formData.append(
+    'data',
+    new Blob([JSON.stringify(data)], { type: 'application/json' })
+  );
+
+  if (photoFile) {
+    formData.append('photo', photoFile);
+  }
+
+  const res = await adminFetchMultipart(`/api/admin/certificates/${id}`, 'PUT', formData);
   return res.data;
 }
 
 /**
  * PATCH /api/admin/certificates/{id}/status
- * Body: { status: 'ACTIVE' | 'REVOKED' | 'PENDING' }
- * Returns: CertificateResponse
  */
 export async function updateCertificateStatus(id, status) {
   const res = await adminFetch(`/api/admin/certificates/${id}/status`, {
@@ -208,13 +273,76 @@ export async function updateCertificateStatus(id, status) {
 
 /**
  * GET /api/admin/certificates/{id}/verification-history
- * Params: { page=0, size=10 }
- * Returns: PagedResponse<VerificationLogResponse>
  */
 export async function getVerificationHistory(id, { page = 0, size = 10 } = {}) {
   const params = new URLSearchParams({ page, size });
   const res = await adminFetch(
     `/api/admin/certificates/${id}/verification-history?${params}`
   );
+  return res.data;
+}
+
+// ── Students ──────────────────────────────────────────────────
+
+/**
+ * GET /api/admin/students
+ * Params: { page, size, search, status, course }
+ * Returns: PagedResponse<StudentResponse>
+ */
+export async function listStudents({ page = 0, size = 15, search = '', status = '', course = '' } = {}) {
+  const params = new URLSearchParams({ page, size });
+  if (search) params.set('search', search);
+  if (status) params.set('status', status);
+  if (course) params.set('course', course);
+  const res = await adminFetch(`/api/admin/students?${params}`);
+  return res.data;
+}
+
+/**
+ * GET /api/admin/students/{id}
+ * Returns: StudentResponse
+ */
+export async function getStudent(id) {
+  const res = await adminFetch(`/api/admin/students/${id}`);
+  return res.data;
+}
+
+/**
+ * POST /api/admin/students  (multipart/form-data)
+ * @param {object}   data      – student fields
+ * @param {File|null} photoFile – optional student photo
+ */
+export async function createStudent(data, photoFile = null) {
+  const formData = new FormData();
+  formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+  if (photoFile) formData.append('photo', photoFile);
+  const res = await adminFetchMultipart('/api/admin/students', 'POST', formData);
+  return res.data;
+}
+
+/**
+ * PUT /api/admin/students/{id}  (multipart/form-data)
+ * @param {number}   id
+ * @param {object}   data
+ * @param {File|null} photoFile
+ */
+export async function updateStudent(id, data, photoFile = null) {
+  const formData = new FormData();
+  formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+  if (photoFile) formData.append('photo', photoFile);
+  const res = await adminFetchMultipart(`/api/admin/students/${id}`, 'PUT', formData);
+  return res.data;
+}
+
+/**
+ * PATCH /api/admin/students/{id}/status
+ * @param {number} id
+ * @param {string} status  – 'ACTIVE' | 'INACTIVE' | 'COMPLETED' | 'DROPPED'
+ */
+export async function updateStudentStatus(id, status) {
+  const res = await adminFetch(`/api/admin/students/${id}/status`, {
+    method: 'PATCH',
+    body  : JSON.stringify({ status }),
+  });
   return res.data;
 }
