@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { verifyCertificate, CertErrorType, CertificateError } from '../services/certificateService';
 import { ACADEMY_NAME, ADDRESS_LINE2, callLink, waLink, WA_MSG_GENERAL } from '../config/siteConfig';
+import { downloadAicitCertificate, downloadTypingCertificate } from '../utils/certDownload';
 
 // ─────────────────────────────────────────────────────────────
 // ICONS  (inline SVG — zero extra dependencies)
@@ -10,7 +11,8 @@ const IconCheck       = () => <svg width="28" height="28" viewBox="0 0 24 24" fi
 const IconX           = () => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>;
 const IconWarning     = () => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
 const IconLoader      = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-spin" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>;
-const IconPrint       = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>;
+const IconDownload    = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
+const IconChevDown    = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>;
 const IconRefresh     = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>;
 const IconPhone       = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 3.07 10.8 19.79 19.79 0 0 1 .03 2.18 2 2 0 0 1 2 0h3a2 2 0 0 1 2 1.72 12.05 12.05 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L6.09 7.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.05 12.05 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>;
 const IconUser        = () => <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
@@ -90,7 +92,9 @@ function LoadingState() {
 }
 
 /** ── Valid certificate card ── */
-function ValidCertificate({ cert, onPrint }) {
+function ValidCertificate({ cert }) {
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+
   // Build the photo src from whichever field is available.
   // Priority: uploaded binary (photoData + photoMimeType) > legacy URL.
   const photoSrc = cert.photoData && cert.photoMimeType
@@ -185,14 +189,56 @@ function ValidCertificate({ cert, onPrint }) {
 
       {/* Action buttons */}
       <div className="flex flex-col sm:flex-row gap-3 mt-5 print:hidden">
-        <button
-          onClick={onPrint}
-          className="btn-outline btn-md flex-1 sm:flex-none"
-          aria-label="Print certificate verification report"
-        >
-          <IconPrint />
-          Print Report
-        </button>
+        {/* Download Certificate dropdown */}
+        <div className="relative flex-1 sm:flex-none">
+          <button
+            onClick={() => setShowDownloadMenu(m => !m)}
+            className="btn-outline btn-md w-full sm:w-auto flex items-center gap-2"
+            aria-haspopup="true"
+            aria-expanded={showDownloadMenu}
+          >
+            <IconDownload />
+            Download Certificate
+            <IconChevDown />
+          </button>
+
+          {showDownloadMenu && (
+            <>
+              {/* Backdrop to close menu */}
+              <div className="fixed inset-0 z-10" onClick={() => setShowDownloadMenu(false)} aria-hidden="true" />
+              <div className="absolute left-0 mt-2 w-64 bg-white rounded-2xl border border-gray-200 shadow-xl z-20 overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-gray-100">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Choose Certificate Type</p>
+                </div>
+                <button
+                  onClick={() => { setShowDownloadMenu(false); downloadAicitCertificate(cert); }}
+                  className="w-full text-left px-4 py-3.5 hover:bg-primary-50 transition-colors flex items-start gap-3 group"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-200 transition-colors mt-0.5">
+                    <IconDownload />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">AICIT Certificate</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Computer course completion certificate</p>
+                  </div>
+                </button>
+                <button
+                  onClick={() => { setShowDownloadMenu(false); downloadTypingCertificate(cert); }}
+                  className="w-full text-left px-4 py-3.5 hover:bg-primary-50 transition-colors flex items-start gap-3 group border-t border-gray-100"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0 group-hover:bg-orange-200 transition-colors mt-0.5">
+                    <IconDownload />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">Computer Based Typing Certificate</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Typing examination certificate</p>
+                  </div>
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
         <a
           href={callLink()}
           className="btn-primary btn-md flex-1 sm:flex-none"
@@ -443,8 +489,6 @@ export default function CertificateVerification() {
     setTimeout(() => inputRef.current?.focus(), 50);
   };
 
-  const handlePrint = () => window.print();
-
   const isLoading = pageState === State.LOADING;
 
   // ─────────────────────────────────────────────────────────
@@ -536,7 +580,7 @@ export default function CertificateVerification() {
             {pageState === State.LOADING && <LoadingState />}
 
             {pageState === State.VALID && certificate && (
-              <ValidCertificate cert={certificate} onPrint={handlePrint} />
+              <ValidCertificate cert={certificate} />
             )}
 
             {pageState === State.REVOKED && (
