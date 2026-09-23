@@ -12,16 +12,13 @@ export default function AdminLogin() {
 
   const emailRef = useRef(null);
 
-  // If already logged in, redirect straight to dashboard
   useEffect(() => {
     if (isAuthenticated) {
       const params = new URLSearchParams(window.location.search);
-      const next   = params.get('next') || '/admin/dashboard';
-      adminNavigate(next);
+      adminNavigate(params.get('next') || '/admin/dashboard');
     }
   }, [isAuthenticated]);
 
-  // Focus email on mount
   useEffect(() => { emailRef.current?.focus(); }, []);
 
   const handleSubmit = async (e) => {
@@ -39,77 +36,74 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+    <div className="admin-login-shell">
+      <div className="admin-login-card">
 
-      {/* Card */}
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
-
-        {/* Header strip */}
-        <div className="bg-hero-gradient px-6 py-7 text-center">
+        {/* Hero strip */}
+        <div className="admin-login-hero">
           <img
             src="/images/master-computer-academy-logo.svg"
             alt="Master Computer Academy"
-            className="h-12 mx-auto mb-3 bg-white rounded-xl px-3 py-1.5"
+            className="admin-login-logo"
           />
-          <p className="text-blue-200 text-xs font-semibold uppercase tracking-widest">
-            Admin Panel
-          </p>
-          <p className="text-white font-bold text-lg mt-1">Sign In</p>
+          <h1 className="admin-login-title">Master Computer Academy</h1>
+          <p className="admin-login-sub">Admin Portal</p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} noValidate className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} noValidate className="admin-login-form">
+
+          <div className="text-center mb-1">
+            <p className="font-semibold text-slate-800" style={{ fontSize: 16 }}>Sign in to your account</p>
+            <p className="text-slate-400 mt-1" style={{ fontSize: 13 }}>Enter your admin credentials below</p>
+          </div>
 
           {error && (
             <div
               role="alert"
-              className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3 font-semibold"
+              className="flex items-start gap-3 rounded-xl px-4 py-3"
+              style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: 13.5 }}
             >
-              {error}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="flex-shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span className="font-medium">{error}</span>
             </div>
           )}
 
           <div>
-            <label htmlFor="admin-email" className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-              Email
-            </label>
+            <label htmlFor="login-email" className="admin-field-label">Email address</label>
             <input
               ref={emailRef}
-              id="admin-email"
+              id="login-email"
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="admin@mastercomputer.local"
               autoComplete="username"
               disabled={isLoggingIn}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm
-                         focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white
-                         disabled:opacity-60 transition-all"
+              className="admin-input"
+              style={isLoggingIn ? { opacity: 0.6 } : {}}
             />
           </div>
 
           <div>
-            <label htmlFor="admin-password" className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-              Password
-            </label>
+            <label htmlFor="login-password" className="admin-field-label">Password</label>
             <div className="relative">
               <input
-                id="admin-password"
+                id="login-password"
                 type={showPw ? 'text' : 'password'}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Enter your password"
                 autoComplete="current-password"
                 disabled={isLoggingIn}
-                className="w-full px-4 py-3 pr-11 rounded-xl border border-gray-200 bg-gray-50 text-sm
-                           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white
-                           disabled:opacity-60 transition-all"
+                className="admin-input"
+                style={{ paddingRight: 52, ...(isLoggingIn ? { opacity: 0.6 } : {}) }}
               />
               <button
                 type="button"
                 onClick={() => setShowPw(p => !p)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600
-                           text-xs font-semibold"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors font-medium"
+                style={{ fontSize: 12 }}
                 aria-label={showPw ? 'Hide password' : 'Show password'}
               >
                 {showPw ? 'Hide' : 'Show'}
@@ -120,22 +114,24 @@ export default function AdminLogin() {
           <button
             type="submit"
             disabled={isLoggingIn || !email.trim() || !password.trim()}
-            className="w-full btn-primary btn-md mt-2 disabled:opacity-60"
+            className="admin-btn-primary w-full justify-center mt-2"
           >
             {isLoggingIn ? (
-              <span className="flex items-center justify-center gap-2">
+              <>
                 <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
                 Signing in…
-              </span>
-            ) : 'Sign In'}
+              </>
+            ) : (
+              'Sign In'
+            )}
           </button>
 
         </form>
-      </div>
 
-      <p className="mt-6 text-xs text-gray-400 text-center">
-        Master Computer Academy · Admin Portal
-      </p>
+        <p className="text-center text-slate-400 pb-6" style={{ fontSize: 12 }}>
+          Master Computer Academy · Wathoda Layout, Nagpur
+        </p>
+      </div>
     </div>
   );
 }

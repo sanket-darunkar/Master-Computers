@@ -35,41 +35,41 @@ export default function AdminStudentEdit({ id }) {
 
   if (loading) return (
     <AdminLayout title="Edit Student">
-      <div className="flex items-center justify-center py-20 text-gray-400 gap-2">
-        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-        Loading…
+      <div className="admin-loading">
+        <svg className="animate-spin admin-spinner h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+        Loading student…
       </div>
     </AdminLayout>
   );
   if (fetchError) return (
     <AdminLayout title="Edit Student">
-      <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-5 py-4 max-w-lg font-semibold flex items-center justify-between">
-        {fetchError} <button onClick={load} className="underline ml-4">Retry</button>
+      <div className="admin-error" style={{ maxWidth: 520 }}>
+        {fetchError} <button onClick={load} className="underline ml-2">Retry</button>
       </div>
     </AdminLayout>
   );
 
   return (
-    <AdminLayout title="Edit Student">
-      <div className="max-w-3xl">
-        <div className="flex items-center gap-2 text-xs text-gray-500 mb-5">
-          <button onClick={() => adminNavigate('/admin/students')} className="hover:text-primary-600 font-semibold">Students</button>
-          <span>›</span>
-          <button onClick={() => adminNavigate(`/admin/students/${id}`)} className="hover:text-primary-600 font-mono font-semibold">{student?.studentId}</button>
-          <span>›</span>
-          <span className="text-gray-700 font-semibold">Edit</span>
+    <AdminLayout title="Edit Student" subtitle="Update student admission details">
+      <div style={{ maxWidth: 760 }}>
+        <div className="admin-breadcrumb">
+          <button onClick={() => adminNavigate('/admin/students')} className="admin-breadcrumb-link">Students</button>
+          <span className="admin-breadcrumb-sep">›</span>
+          <button onClick={() => adminNavigate(`/admin/students/${id}`)} className="admin-breadcrumb-link font-mono">{student?.studentId}</button>
+          <span className="admin-breadcrumb-sep">›</span>
+          <span className="admin-breadcrumb-current">Edit</span>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6 sm:p-8">
-          <div className="bg-gray-50 rounded-xl px-4 py-3 mb-6 flex items-center gap-3">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-gray-400 flex-shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <p className="text-xs text-gray-600 font-semibold">
-              Student ID <span className="font-mono text-gray-900">{student?.studentId}</span> cannot be changed after creation.
+        <div className="admin-card p-6 sm:p-8">
+          <div className="flex items-start gap-3 rounded-lg px-4 py-3 mb-6" style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-slate-400 flex-shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <p className="text-slate-600 font-medium" style={{ fontSize: 13 }}>
+              Student ID <span className="font-mono text-slate-800 font-semibold">{student?.studentId}</span> cannot be changed after creation.
             </p>
           </div>
 
-          <h2 className="font-extrabold text-gray-900 text-base mb-1">Edit Student</h2>
-          <p className="text-sm text-gray-500 mb-6">Update student details below.</p>
+          <h2 className="font-bold text-slate-900 mb-1" style={{ fontSize: 16 }}>Edit Student</h2>
+          <p className="text-slate-400 mb-6" style={{ fontSize: 13 }}>Update student details below.</p>
 
           <StudentForm
             initialValues={student}

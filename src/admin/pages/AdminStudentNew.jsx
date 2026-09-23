@@ -26,17 +26,17 @@ export default function AdminStudentNew() {
   };
 
   return (
-    <AdminLayout title="Add Student">
-      <div className="max-w-3xl">
-        <div className="flex items-center gap-2 text-xs text-gray-500 mb-5">
-          <button onClick={() => adminNavigate('/admin/students')} className="hover:text-primary-600 font-semibold">Students</button>
-          <span>›</span>
-          <span className="text-gray-700 font-semibold">New Student</span>
+    <AdminLayout title="Add Student" subtitle="Create a new student admission record">
+      <div style={{ maxWidth: 760 }}>
+        <div className="admin-breadcrumb">
+          <button onClick={() => adminNavigate('/admin/students')} className="admin-breadcrumb-link">Students</button>
+          <span className="admin-breadcrumb-sep">›</span>
+          <span className="admin-breadcrumb-current">New Student</span>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6 sm:p-8">
-          <h2 className="font-extrabold text-gray-900 text-base mb-1">New Student Admission</h2>
-          <p className="text-sm text-gray-500 mb-6">Fill in all required fields marked with <span className="text-red-500 font-bold">*</span></p>
+        <div className="admin-card p-6 sm:p-8">
+          <h2 className="font-bold text-slate-900 mb-1" style={{ fontSize: 16 }}>New Student Admission</h2>
+          <p className="text-slate-400 mb-6" style={{ fontSize: 13 }}>Fields marked <span className="text-red-500 font-bold">*</span> are required</p>
           <StudentForm
             isEdit={false}
             onSubmit={handleSubmit}

@@ -29,22 +29,17 @@ export default function AdminCertNew() {
   };
 
   return (
-    <AdminLayout title="Add Certificate">
-      <div className="max-w-2xl">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs text-gray-500 mb-5">
-          <button onClick={() => adminNavigate('/admin/certificates')} className="hover:text-primary-600 font-semibold">
-            Certificates
-          </button>
-          <span>›</span>
-          <span className="text-gray-700 font-semibold">New Certificate</span>
+    <AdminLayout title="Add Certificate" subtitle="Issue a new certificate to a student">
+      <div style={{ maxWidth: 680 }}>
+        <div className="admin-breadcrumb">
+          <button onClick={() => adminNavigate('/admin/certificates')} className="admin-breadcrumb-link">Certificates</button>
+          <span className="admin-breadcrumb-sep">›</span>
+          <span className="admin-breadcrumb-current">New Certificate</span>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6 sm:p-8">
-          <h2 className="font-extrabold text-gray-900 text-base mb-1">New Certificate</h2>
-          <p className="text-sm text-gray-500 mb-6">
-            Fill in all required fields. Certificate Number must be unique.
-          </p>
+        <div className="admin-card p-6 sm:p-8">
+          <h2 className="font-bold text-slate-900 mb-1" style={{ fontSize: 16 }}>New Certificate</h2>
+          <p className="text-slate-400 mb-6" style={{ fontSize: 13 }}>Fill in all required fields. Certificate Number must be unique.</p>
 
           <CertificateForm
             isEdit={false}

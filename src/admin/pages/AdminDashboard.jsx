@@ -1,59 +1,93 @@
 import React, { useEffect, useState } from 'react';
-import AdminLayout       from '../components/AdminLayout';
-import StatusBadge       from '../components/StatusBadge';
-import { listCertificates } from '../../services/adminApi';
-import { adminNavigate }  from '../AdminApp';
+import AdminLayout          from '../components/AdminLayout';
+import StatusBadge          from '../components/StatusBadge';
+import { listCertificates, listStudents } from '../../services/adminApi';
+import { adminNavigate }    from '../AdminApp';
 
-function StatCard({ label, value, sub, color, icon }) {
-  return (
-    <div className={`bg-white rounded-2xl border border-gray-100 shadow-card p-5 flex items-start gap-4`}>
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
-        {icon}
-      </div>
-      <div className="min-w-0">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</p>
-        <p className="text-2xl font-extrabold text-gray-900 mt-0.5">
-          {value === null ? <span className="animate-pulse text-gray-300">—</span> : value}
-        </p>
-        {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
-      </div>
-    </div>
-  );
-}
-
-function formatDate(iso) {
+function fmtDate(iso) {
   if (!iso) return '—';
   try { return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }); }
   catch { return iso; }
 }
 
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function StatCard({ label, value, icon, iconBg, iconColor, trend }) {
+  return (
+    <div className="admin-stat-card">
+      <div className="admin-stat-icon" style={{ background: iconBg }}>
+        <span style={{ color: iconColor }}>{icon}</span>
+      </div>
+      <div className="admin-stat-value">
+        {value === null
+          ? <span className="inline-block w-12 h-8 admin-skeleton rounded" />
+          : value}
+      </div>
+      <div className="admin-stat-label">{label}</div>
+      {trend && <div className="admin-stat-sub">{trend}</div>}
+    </div>
+  );
+}
+
+const IcoStudents = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+  </svg>
+);
+const IcoCerts = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+    <polyline points="14 2 14 8 20 8"/>
+  </svg>
+);
+const IcoActive = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+  </svg>
+);
+const IcoPending = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+  </svg>
+);
+const IcoPlus = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+);
+
 export default function AdminDashboard() {
-  const [stats,   setStats]   = useState({ total: null, active: null, revoked: null, pending: null });
-  const [recent,  setRecent]  = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState('');
+  const [certStats,   setCertStats]   = useState({ total: null, active: null });
+  const [stuStats,    setStuStats]    = useState({ total: null, active: null });
+  const [recentCerts, setRecentCerts] = useState([]);
+  const [recentStus,  setRecentStus]  = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [error,       setError]       = useState('');
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
-        // Fetch all three status counts + first page for recent list in parallel
-        const [allPage, activePage, revokedPage, pendingPage] = await Promise.all([
-          listCertificates({ page: 0, size: 8 }),
+        const [allCerts, activeCerts, allStus, activeStus] = await Promise.allSettled([
+          listCertificates({ page: 0, size: 5 }),
           listCertificates({ page: 0, size: 1, status: 'ACTIVE' }),
-          listCertificates({ page: 0, size: 1, status: 'REVOKED' }),
-          listCertificates({ page: 0, size: 1, status: 'PENDING' }),
+          listStudents({ page: 0, size: 5 }),
+          listStudents({ page: 0, size: 1, status: 'ACTIVE' }),
         ]);
         if (cancelled) return;
-        setStats({
-          total  : allPage.totalElements,
-          active : activePage.totalElements,
-          revoked: revokedPage.totalElements,
-          pending: pendingPage.totalElements,
-        });
-        setRecent(allPage.content ?? []);
+
+        if (allCerts.status    === 'fulfilled') { setRecentCerts(allCerts.value.content ?? []); setCertStats(p => ({ ...p, total: allCerts.value.totalElements })); }
+        if (activeCerts.status === 'fulfilled') setCertStats(p => ({ ...p, active: activeCerts.value.totalElements }));
+        if (allStus.status     === 'fulfilled') { setRecentStus(allStus.value.content ?? []); setStuStats(p => ({ ...p, total: allStus.value.totalElements })); }
+        if (activeStus.status  === 'fulfilled') setStuStats(p => ({ ...p, active: activeStus.value.totalElements }));
       } catch (err) {
-        if (!cancelled) setError(err.message || 'Failed to load dashboard data.');
+        if (!cancelled) setError(err.message || 'Failed to load dashboard.');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -63,109 +97,125 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <AdminLayout title="Dashboard">
+    <AdminLayout title="Dashboard" subtitle={`${getGreeting()} — here's an overview of your academy`}>
 
-      {/* Quick actions */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        <button
-          onClick={() => adminNavigate('/admin/certificates/new')}
-          className="btn-primary btn-md text-sm"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add Certificate
+      {error && <div className="admin-error mb-5">{error}</div>}
+
+      {/* ── Quick Actions ──────────────────────────────────── */}
+      <div className="flex flex-wrap gap-2 mb-7">
+        <button onClick={() => adminNavigate('/admin/students/new')} className="admin-btn-primary">
+          <IcoPlus /> Add Student
         </button>
-        <button
-          onClick={() => adminNavigate('/admin/certificates')}
-          className="btn-outline btn-md text-sm"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          View All Certificates
+        <button onClick={() => adminNavigate('/admin/certificates/new')} className="admin-btn-secondary">
+          <IcoPlus /> Add Certificate
+        </button>
+        <button onClick={() => adminNavigate('/admin/students')} className="admin-btn-ghost">
+          View All Students →
+        </button>
+        <button onClick={() => adminNavigate('/admin/certificates')} className="admin-btn-ghost">
+          View All Certificates →
         </button>
       </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3 mb-6 font-semibold">
-          {error}
-        </div>
-      )}
-
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard
-          label="Total Certificates"
-          value={stats.total}
-          color="bg-primary-100 text-primary-700"
-          icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>}
-        />
-        <StatCard
-          label="Active"
-          value={stats.active}
-          color="bg-green-100 text-green-700"
-          icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>}
-        />
-        <StatCard
-          label="Revoked"
-          value={stats.revoked}
-          color="bg-red-100 text-red-700"
-          icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>}
-        />
-        <StatCard
-          label="Pending"
-          value={stats.pending}
-          color="bg-yellow-100 text-yellow-700"
-          icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>}
-        />
+      {/* ── Stats ─────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-7">
+        <StatCard label="Total Students"      value={stuStats.total}    iconBg="#dbeafe" iconColor="#1d4ed8" icon={<IcoStudents />} />
+        <StatCard label="Active Students"     value={stuStats.active}   iconBg="#dcfce7" iconColor="#15803d" icon={<IcoActive />}   />
+        <StatCard label="Total Certificates"  value={certStats.total}   iconBg="#f3e8ff" iconColor="#7e22ce" icon={<IcoCerts />}    />
+        <StatCard label="Active Certificates" value={certStats.active}  iconBg="#fef9c3" iconColor="#a16207" icon={<IcoPending />}  />
       </div>
 
-      {/* Recent certificates */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-card">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <h2 className="font-extrabold text-gray-900 text-sm">Recent Certificates</h2>
-          <button
-            onClick={() => adminNavigate('/admin/certificates')}
-            className="text-xs text-primary-600 font-semibold hover:underline"
-          >
-            View all →
-          </button>
+      {/* ── Recent tables ─────────────────────────────────── */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+
+        {/* Recent Students */}
+        <div className="admin-table-wrap">
+          <div className="admin-card-header">
+            <span className="admin-card-title">Recent Students</span>
+            <button onClick={() => adminNavigate('/admin/students')}
+              className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
+              style={{ fontSize: 12.5 }}>View all →</button>
+          </div>
+          {loading ? (
+            <div className="admin-loading"><svg className="animate-spin admin-spinner h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Loading…</div>
+          ) : recentStus.length === 0 ? (
+            <div className="admin-empty">
+              <div className="admin-empty-icon"><IcoStudents /></div>
+              <p className="admin-empty-title">No students yet</p>
+              <p className="admin-empty-sub">Add your first student to get started.</p>
+              <button onClick={() => adminNavigate('/admin/students/new')} className="admin-btn-primary admin-btn-sm">Add Student</button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="admin-table">
+                <thead><tr>
+                  <th>Student</th>
+                  <th className="hidden sm:table-cell">Course</th>
+                  <th>Status</th>
+                </tr></thead>
+                <tbody>
+                  {recentStus.map(s => (
+                    <tr key={s.id} onClick={() => adminNavigate(`/admin/students/${s.id}`)}>
+                      <td>
+                        <div className="admin-table-name">{[s.firstName, s.surname].filter(Boolean).join(' ')}</div>
+                        <div className="admin-table-secondary admin-table-mono">{s.studentId}</div>
+                      </td>
+                      <td className="hidden sm:table-cell">
+                        <div className="text-slate-600 max-w-[160px] truncate" style={{ fontSize: 13 }}>{s.course || '—'}</div>
+                      </td>
+                      <td><StatusBadge status={s.status} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-12 text-gray-400 text-sm">
-            <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-            Loading…
+        {/* Recent Certificates */}
+        <div className="admin-table-wrap">
+          <div className="admin-card-header">
+            <span className="admin-card-title">Recent Certificates</span>
+            <button onClick={() => adminNavigate('/admin/certificates')}
+              className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
+              style={{ fontSize: 12.5 }}>View all →</button>
           </div>
-        ) : recent.length === 0 ? (
-          <div className="py-12 text-center text-gray-400 text-sm">No certificates yet.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left border-b border-gray-100">
-                  <th className="px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Cert No.</th>
-                  <th className="px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Student</th>
-                  <th className="hidden sm:table-cell px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Course</th>
-                  <th className="hidden md:table-cell px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Issue Date</th>
-                  <th className="px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recent.map(cert => (
-                  <tr
-                    key={cert.id}
-                    onClick={() => adminNavigate(`/admin/certificates/${cert.id}`)}
-                    className="border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors last:border-0"
-                  >
-                    <td className="px-5 py-3 font-mono text-xs text-gray-700 font-semibold">{cert.certificateNumber}</td>
-                    <td className="px-5 py-3 font-semibold text-gray-900">{cert.studentName}</td>
-                    <td className="hidden sm:table-cell px-5 py-3 text-gray-600">{cert.courseName}</td>
-                    <td className="hidden md:table-cell px-5 py-3 text-gray-500">{formatDate(cert.issueDate)}</td>
-                    <td className="px-5 py-3"><StatusBadge status={cert.status} /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+          {loading ? (
+            <div className="admin-loading"><svg className="animate-spin admin-spinner h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Loading…</div>
+          ) : recentCerts.length === 0 ? (
+            <div className="admin-empty">
+              <div className="admin-empty-icon"><IcoCerts /></div>
+              <p className="admin-empty-title">No certificates yet</p>
+              <p className="admin-empty-sub">Issue your first certificate to get started.</p>
+              <button onClick={() => adminNavigate('/admin/certificates/new')} className="admin-btn-primary admin-btn-sm">Add Certificate</button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="admin-table">
+                <thead><tr>
+                  <th>Certificate</th>
+                  <th className="hidden sm:table-cell">Date</th>
+                  <th>Status</th>
+                </tr></thead>
+                <tbody>
+                  {recentCerts.map(c => (
+                    <tr key={c.id} onClick={() => adminNavigate(`/admin/certificates/${c.id}`)}>
+                      <td>
+                        <div className="admin-table-name">{c.studentName}</div>
+                        <div className="admin-table-secondary admin-table-mono">{c.certificateNumber}</div>
+                      </td>
+                      <td className="hidden sm:table-cell">
+                        <div style={{ fontSize: 13, color: '#64748b' }}>{fmtDate(c.issueDate)}</div>
+                      </td>
+                      <td><StatusBadge status={c.status} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
       </div>
     </AdminLayout>
   );
