@@ -1,13 +1,19 @@
 /**
  * StudentPrint
  * ────────────
- * Matches the exact Master Computer Academy admission form layout from PDF.
+ * Renders a 2-page A4 print document matching the MCA admission form PDF.
  *
- * Page 1 — Application Form (with fees installment table at bottom)
- * Page 2 — Exam Form        (same layout, no fees table, with Reg No)
+ * Page 1 — Application Form (with fees installment table)
+ * Page 2 — Exam Form (same layout, Reg No header, no fees table)
  *
- * Screen: shows a confirmation dialog overlay (print:hidden)
- * Print:  only #student-print-doc is visible — all admin UI hidden
+ * ROOT CAUSE FIX: the previous version used className="hidden print:block"
+ * on #student-print-doc. Tailwind's `hidden` = `display:none !important`
+ * which overrides everything including @media print rules. The element was
+ * never rendered in the print layout → blank preview.
+ *
+ * FIX: use inline style={{ display:'none' }} (no !important) so @media print
+ * can override it. Also removed page-break-inside:avoid from .print-page so
+ * Chrome can paginate across the full A4 height.
  */
 import React from 'react';
 
@@ -18,17 +24,13 @@ function fmtDate(iso) {
 }
 const v = (val) => val || '';
 
-/* ── Reusable field cell ─────────────────────────────────────── */
-function Cell({ label, value, w = 'auto', border = true }) {
-  return (
-    <td style={{ border: border ? '1px solid #999' : 'none', padding: '2px 4px', width: w, verticalAlign: 'top', fontSize: '8pt' }}>
-      {label && <div style={{ fontSize: '7pt', color: '#555', fontWeight: 600, marginBottom: 1 }}>{label}</div>}
-      <div style={{ minHeight: 14, fontWeight: 700, fontSize: '8.5pt', color: '#111' }}>{value}</div>
-    </td>
-  );
+/** Resolve photo src — binary upload takes priority over URL */
+function photoSrc(s) {
+  if (s.photoData && s.photoMimeType) return `data:${s.photoMimeType};base64,${s.photoData}`;
+  if (s.studentPhotoUrl) return s.studentPhotoUrl;
+  return null;
 }
 
-/* ── Both pages share this shell ─────────────────────────────── */
 function FormPage({ student: s, isExam }) {
   const fullName = [s.firstName, s.middleName, s.surname].filter(Boolean).join(' ');
   const age = (() => {
@@ -37,68 +39,55 @@ function FormPage({ student: s, isExam }) {
     const a = Math.floor(diff / (365.25 * 24 * 3600 * 1000));
     return a > 0 && a < 120 ? String(a) : '';
   })();
-  const balance = (parseFloat(s.totalFees) || 0) - (parseFloat(s.feesPaid) || 0);
+  const balance  = (parseFloat(s.totalFees) || 0) - (parseFloat(s.feesPaid) || 0);
+  const photo    = photoSrc(s);
 
-  const outerBorder = { border: '1.5px solid #333' };
-  const innerBorder = { border: '1px solid #aaa' };
-  const tdStyle = { ...innerBorder, padding: '2px 4px', fontSize: '8pt', verticalAlign: 'top' };
-  const labelStyle = { fontSize: '7pt', color: '#555', fontWeight: 600 };
-  const valueStyle = { fontWeight: 700, fontSize: '8.5pt', color: '#111', minHeight: 14 };
-
-  /* installment rows — show up to 8 rows for the fees table */
-  const installmentRows = Array.from({ length: 8 });
+  const ob  = { border: '1.5px solid #333' };            // outer border
+  const ib  = { border: '1px solid #aaa' };              // inner border
+  const lbl = { fontSize: '7pt', color: '#555', fontWeight: 600 };
+  const val = { fontWeight: 700, fontSize: '8.5pt', color: '#111', minHeight: 14 };
 
   return (
-    <div className="print-page" style={{ fontFamily: 'Arial, sans-serif', fontSize: '8pt', color: '#111' }}>
+    /* print-page class controls A4 sizing; page-break-after forces new page */
+    <div className="print-page">
 
-      {/* ── HEADER ───────────────────────────────────────────── */}
-      <table width="100%" style={{ borderCollapse: 'collapse', marginBottom: 3 }}>
-        <tbody>
-          <tr>
-            {/* Left: black box + Authorized Training Center */}
-            <td width="22%" style={{ verticalAlign: 'top', paddingRight: 6 }}>
-              {isExam && (
-                <div style={{ fontSize: '6.5pt', fontWeight: 700, color: '#000', marginBottom: 2 }}>
-                  Reg No- IN8308A
-                </div>
-              )}
-              <div style={{ background: '#000', width: 18, height: 18, marginBottom: 4 }} />
-              <div style={{ color: '#1565c0', fontWeight: 700, fontSize: '7pt' }}>Authorized Training Center</div>
-              <div style={{ fontSize: '6.5pt', fontWeight: 600 }}>ISO Certified Institute 9001:2015</div>
-            </td>
+      {/* ── HEADER ─────────────────────────────────────────── */}
+      <table width="100%" style={{ borderCollapse: 'collapse', marginBottom: 4 }}>
+        <tbody><tr>
+          {/* Left col */}
+          <td width="22%" style={{ verticalAlign: 'top', paddingRight: 6 }}>
+            {isExam && <div style={{ fontSize: '6.5pt', fontWeight: 700, marginBottom: 2 }}>Reg No- IN8308A</div>}
+            <div style={{ background: '#000', width: 16, height: 16, marginBottom: 3 }} />
+            <div style={{ color: '#1565c0', fontWeight: 700, fontSize: '7pt' }}>Authorized Training Center</div>
+            <div style={{ fontSize: '6.5pt', fontWeight: 600 }}>ISO Certified Institute 9001:2015</div>
+          </td>
 
-            {/* Centre: Logo + address */}
-            <td width="56%" style={{ textAlign: 'center', verticalAlign: 'middle' }}>
-              <img src="/images/master-computer-academy-logo.svg" alt="MCA" style={{ height: 52 }} />
-              <div style={{ fontSize: '7pt', fontWeight: 600, marginTop: 2 }}>
-                18 Lok Kalyan Society, Wathoda Layout Nagpur (9156348591)
-              </div>
-            </td>
+          {/* Centre: logo + address */}
+          <td width="56%" style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+            <img src="/images/master-computer-academy-logo.svg" alt="MCA"
+              style={{ height: 50, display: 'block', margin: '0 auto' }} />
+            <div style={{ fontSize: '7pt', fontWeight: 600, marginTop: 2 }}>
+              18 Lok Kalyan Society, Wathoda Layout Nagpur (9156348591)
+            </div>
+          </td>
 
-            {/* Right: Student ID + colour boxes */}
-            <td width="22%" style={{ textAlign: 'right', verticalAlign: 'top' }}>
-              {isExam && (
-                <div style={{ fontSize: '6.5pt', fontWeight: 700, color: '#000', textAlign: 'right', marginBottom: 2 }}>
-                  ALC -14210808
-                </div>
-              )}
-              <div style={{ fontWeight: 700, fontSize: '7.5pt', marginBottom: 3 }}>Student ID No{isExam ? ':' : ''}</div>
-              <div style={{ border: '1.5px solid #333', minHeight: 18, padding: '2px 4px', fontWeight: 700, fontSize: '9pt' }}>
-                {v(s.studentId)}
-              </div>
-              {/* Colour indicator boxes */}
-              <div style={{ display: 'flex', gap: 3, justifyContent: 'flex-end', marginTop: 4 }}>
-                {['#333', '#999', '#ccc'].map((c, i) => (
-                  <div key={i} style={{ width: 16, height: 16, background: c }} />
-                ))}
-              </div>
-            </td>
-          </tr>
-        </tbody>
+          {/* Right: student ID box */}
+          <td width="22%" style={{ textAlign: 'right', verticalAlign: 'top' }}>
+            {isExam && <div style={{ fontSize: '6.5pt', fontWeight: 700, textAlign: 'right', marginBottom: 2 }}>ALC -14210808</div>}
+            <div style={{ fontWeight: 700, fontSize: '7.5pt', marginBottom: 2 }}>Student ID No{isExam ? ':' : ''}</div>
+            <div style={{ border: '1.5px solid #333', minHeight: 18, padding: '2px 4px', fontWeight: 700, fontSize: '9pt' }}>
+              {v(s.studentId)}
+            </div>
+            <div style={{ display: 'flex', gap: 3, justifyContent: 'flex-end', marginTop: 3 }}>
+              {['#333', '#888', '#ccc'].map((c, i) => <div key={i} style={{ width: 14, height: 14, background: c }} />)}
+            </div>
+          </td>
+        </tr></tbody>
       </table>
 
-      {/* ── FORM TITLE ───────────────────────────────────────── */}
-      <div style={{ background: '#333', color: '#fff', textAlign: 'center', fontWeight: 700, fontSize: '11pt', padding: '4px 0', borderRadius: 2, marginBottom: 3 }}>
+      {/* ── TITLE BAR ──────────────────────────────────────── */}
+      <div style={{ background: '#2b2b2b', color: '#fff', textAlign: 'center', fontWeight: 700,
+        fontSize: '11pt', padding: '3px 0', marginBottom: 3 }}>
         {isExam ? 'Exam Form' : 'Application Form'}
       </div>
 
@@ -110,258 +99,219 @@ function FormPage({ student: s, isExam }) {
             To be Filled in by the Applicant only
           </td>
           <td style={{ fontSize: '7pt', fontWeight: 600, textAlign: 'right' }}>
-            All fields marked with * are MANDATORY. Tick The appropriate bracket □
+            All fields marked with * are MANDATORY.&nbsp;Tick The appropriate bracket □
           </td>
         </tr></tbody>
       </table>
 
-      {/* Course request bar */}
-      <div style={{ background: '#1565c0', color: '#fff', fontWeight: 700, fontSize: '8pt', padding: '3px 6px', marginBottom: 4 }}>
-        Sir, I Request You To Admit Me To Course :- &nbsp;&nbsp;&nbsp;
-        <span style={{ borderBottom: '1px solid #fff', display: 'inline-block', minWidth: 180 }}>{v(s.course)}</span>
+      {/* Course bar */}
+      <div style={{ background: '#1565c0', color: '#fff', fontWeight: 700, fontSize: '8pt',
+        padding: '3px 6px', marginBottom: 3 }}>
+        Sir, I Request You To Admit Me To Course :-&nbsp;&nbsp;
+        <span style={{ borderBottom: '1px solid #fff', display: 'inline-block', minWidth: 200 }}>{v(s.course)}</span>
       </div>
 
-      {/* ── PERSONAL DETAILS + PHOTO ──────────────────────────── */}
-      <table width="100%" style={{ borderCollapse: 'collapse', marginBottom: 0, ...outerBorder }}>
+      {/* ── PERSONAL DETAILS + PHOTO ───────────────────────── */}
+      <table width="100%" style={{ borderCollapse: 'collapse', ...ob }}>
         <tbody>
           <tr>
-            {/* Icon column */}
-            <td rowSpan={5} width="6%" style={{ ...innerBorder, textAlign: 'center', verticalAlign: 'middle', padding: 4, fontSize: '20pt' }}>
-              🎓
+            <td rowSpan={5} width="6%" style={{ ...ib, textAlign: 'center', verticalAlign: 'middle', fontSize: '18pt', padding: 3 }}>🎓</td>
+            <td colSpan={4} style={{ ...ib, padding: '2px 4px' }}>
+              <span style={lbl}>First Name: </span>
+              <span style={{ ...val, borderBottom: '1px solid #999', display: 'inline-block', minWidth: 240 }}>{v(s.firstName)}</span>
             </td>
-
-            {/* Main personal fields */}
-            <td colSpan={4} style={{ ...innerBorder, padding: '2px 4px' }}>
-              <span style={labelStyle}>First Name: </span>
-              <span style={{ ...valueStyle, borderBottom: '1px solid #999', display: 'inline-block', minWidth: 260 }}>{v(s.firstName)}</span>
-            </td>
-
-            {/* Photo box — rowspan */}
-            <td rowSpan={4} width="15%" style={{ ...innerBorder, textAlign: 'center', verticalAlign: 'top', padding: 4 }}>
-              <div style={{ border: '1.5px solid #555', width: 70, height: 85, margin: '0 auto', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {s.studentPhotoUrl
-                  ? <img src={s.studentPhotoUrl} alt="Student" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span style={{ fontSize: '6pt', color: '#aaa', textAlign: 'center', padding: 2 }}>Photo</span>
-                }
+            {/* Photo box — rowSpan=4 */}
+            <td rowSpan={4} width="16%" style={{ ...ib, textAlign: 'center', verticalAlign: 'top', padding: 4 }}>
+              <div style={{ border: '1.5px solid #555', width: 72, height: 88, margin: '0 auto',
+                overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {photo
+                  ? <img src={photo} alt="Student" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <span style={{ fontSize: '6pt', color: '#aaa', textAlign: 'center' }}>Photo</span>}
               </div>
             </td>
           </tr>
-
           <tr>
-            <td colSpan={2} style={{ ...innerBorder, padding: '2px 4px' }}>
-              <span style={labelStyle}>Middle Name: </span>
-              <span style={{ ...valueStyle, borderBottom: '1px solid #999', display: 'inline-block', minWidth: 100 }}>{v(s.middleName)}</span>
+            <td colSpan={2} style={{ ...ib, padding: '2px 4px' }}>
+              <span style={lbl}>Middle Name: </span>
+              <span style={{ ...val, borderBottom: '1px solid #999', display: 'inline-block', minWidth: 90 }}>{v(s.middleName)}</span>
             </td>
-            <td colSpan={2} style={{ ...innerBorder, padding: '2px 4px' }}>
-              <span style={labelStyle}>Mother Name: </span>
-              <span style={{ ...valueStyle, borderBottom: '1px solid #999', display: 'inline-block', minWidth: 100 }}>{v(s.motherName)}</span>
-            </td>
-          </tr>
-
-          <tr>
-            <td colSpan={4} style={{ ...innerBorder, padding: '2px 4px' }}>
-              <span style={labelStyle}>Surname: </span>
-              <span style={{ ...valueStyle, borderBottom: '1px solid #999', display: 'inline-block', minWidth: 260 }}>{v(s.surname)}</span>
+            <td colSpan={2} style={{ ...ib, padding: '2px 4px' }}>
+              <span style={lbl}>Mother Name: </span>
+              <span style={{ ...val, borderBottom: '1px solid #999', display: 'inline-block', minWidth: 90 }}>{v(s.motherName)}</span>
             </td>
           </tr>
-
           <tr>
-            <td colSpan={4} style={{ ...innerBorder, padding: '2px 4px' }}>
-              <span style={{ fontSize: '7pt', color: '#1565c0', fontWeight: 600 }}>
+            <td colSpan={4} style={{ ...ib, padding: '2px 4px' }}>
+              <span style={lbl}>Surname: </span>
+              <span style={{ ...val, borderBottom: '1px solid #999', display: 'inline-block', minWidth: 240 }}>{v(s.surname)}</span>
+            </td>
+          </tr>
+          <tr>
+            <td colSpan={4} style={{ ...ib, padding: '2px 4px' }}>
+              <div style={{ fontSize: '7pt', color: '#1565c0', fontWeight: 600 }}>
                 Name of the applicant as it should appear on the Fee Receipt, Hall Ticket and Final Certificate.
-              </span>
-              <div style={{ border: '1px solid #aaa', minHeight: 16, padding: '1px 4px', fontWeight: 700, fontSize: '8.5pt', marginTop: 2 }}>
+              </div>
+              <div style={{ border: '1px solid #aaa', minHeight: 15, padding: '1px 4px', ...val, marginTop: 2 }}>
                 {v(s.applicantName) || fullName}
               </div>
             </td>
           </tr>
-
-          {/* DOB + Age + Photo continues */}
           <tr>
-            <td width="28%" style={{ ...innerBorder, padding: '2px 4px', fontWeight: 700, fontSize: '8pt' }}>
-              <span style={labelStyle}>Date of Birth</span>
-              <div style={{ ...valueStyle, marginTop: 1 }}>{fmtDate(s.dateOfBirth)}</div>
+            <td width="26%" style={{ ...ib, padding: '2px 4px' }}>
+              <div style={lbl}>Date of Birth</div>
+              <div style={val}>{fmtDate(s.dateOfBirth)}</div>
             </td>
-            <td width="18%" style={{ ...innerBorder, padding: '2px 4px', fontWeight: 700, fontSize: '8pt' }}>
-              <span style={labelStyle}>Age</span>
-              <div style={{ ...valueStyle, marginTop: 1 }}>{age}</div>
+            <td width="16%" style={{ ...ib, padding: '2px 4px' }}>
+              <div style={lbl}>Age</div>
+              <div style={val}>{age}</div>
             </td>
-            <td colSpan={2} width="33%" style={{ ...innerBorder, padding: '2px 4px', fontSize: '7pt', color: '#777', fontStyle: 'italic' }}>
-              {/* spacer */}
-            </td>
-            {/* Photo cell ends with rowspan */}
-            <td style={{ ...innerBorder, padding: '2px 4px', textAlign: 'center', fontSize: '6.5pt', color: '#555' }}>
-              (Photo)
-            </td>
+            <td colSpan={2} style={{ ...ib }} />
+            <td style={{ ...ib, padding: '2px 4px', textAlign: 'center', fontSize: '6.5pt', color: '#666' }}>(Photo)</td>
           </tr>
         </tbody>
       </table>
 
-      {/* ── CONTACT ROW ───────────────────────────────────────── */}
-      <table width="100%" style={{ borderCollapse: 'collapse', ...outerBorder, borderTop: 'none' }}>
+      {/* ── CONTACT ────────────────────────────────────────── */}
+      <table width="100%" style={{ borderCollapse: 'collapse', ...ob, borderTop: 'none' }}>
         <tbody>
           <tr>
-            <td width="5%" style={{ ...innerBorder, textAlign: 'center', fontSize: '18pt', padding: 4 }} rowSpan={2}>📱</td>
-            <td width="38%" style={{ ...innerBorder, padding: '2px 4px' }}>
-              <div style={{ ...labelStyle, fontWeight: 700 }}>Mobile No. (Own):</div>
-              <div style={{ ...valueStyle }}>+91 &nbsp; {v(s.ownMobile)}</div>
+            <td rowSpan={2} width="5%" style={{ ...ib, textAlign: 'center', fontSize: '16pt', padding: 3 }}>📱</td>
+            <td width="36%" style={{ ...ib, padding: '2px 4px' }}>
+              <div style={{ ...lbl, fontWeight: 700 }}>Mobile No. (Own):</div>
+              <div style={val}>+91 {v(s.ownMobile)}</div>
             </td>
-            <td width="20%" style={{ ...innerBorder, padding: '2px 4px' }}>
-              <div style={labelStyle}>Gender:</div>
-              <div style={valueStyle}>{v(s.gender)}</div>
+            <td width="20%" style={{ ...ib, padding: '2px 4px' }}>
+              <div style={lbl}>Gender:</div>
+              <div style={val}>{v(s.gender)}</div>
             </td>
-            <td width="5%" style={{ ...innerBorder, textAlign: 'center', fontSize: '14pt' }}>💞</td>
-            <td width="25%" style={{ ...innerBorder, padding: '2px 4px' }}>
-              <div style={labelStyle}>Marital Status:</div>
-              <div style={valueStyle}>{v(s.maritalStatus)}</div>
+            <td width="5%" style={{ ...ib, textAlign: 'center', fontSize: '12pt' }}>💞</td>
+            <td style={{ ...ib, padding: '2px 4px' }}>
+              <div style={lbl}>Marital Status:</div>
+              <div style={val}>{v(s.maritalStatus)}</div>
             </td>
           </tr>
           <tr>
-            <td style={{ ...innerBorder, padding: '2px 4px' }}>
-              <div style={labelStyle}>Mobile No.(Other): WhatsApp</div>
-              <div style={valueStyle}>+91 &nbsp; {v(s.otherMobile)}</div>
+            <td style={{ ...ib, padding: '2px 4px' }}>
+              <div style={lbl}>Mobile No.(Other): WhatsApp</div>
+              <div style={val}>+91 {v(s.otherMobile)}</div>
             </td>
-            <td colSpan={3} style={{ ...innerBorder, padding: '2px 4px' }}>
-              <div style={{ ...labelStyle, fontWeight: 700 }}>Aadhaar Number:</div>
-              <div style={valueStyle}>{v(s.aadhaarNumber)}</div>
+            <td colSpan={3} style={{ ...ib, padding: '2px 4px' }}>
+              <div style={{ ...lbl, fontWeight: 700 }}>Aadhaar Number:</div>
+              <div style={val}>{v(s.aadhaarNumber)}</div>
             </td>
           </tr>
         </tbody>
       </table>
 
-      {/* ── ADDRESS ───────────────────────────────────────────── */}
-      <table width="100%" style={{ borderCollapse: 'collapse', ...outerBorder, borderTop: 'none' }}>
+      {/* ── ADDRESS ────────────────────────────────────────── */}
+      <table width="100%" style={{ borderCollapse: 'collapse', ...ob, borderTop: 'none' }}>
         <tbody>
           <tr>
-            <td width="5%" style={{ ...innerBorder, textAlign: 'center', fontSize: '18pt', padding: 4 }} rowSpan={3}>📍</td>
-            <td colSpan={3} style={{ ...innerBorder, padding: '2px 4px', fontWeight: 700, fontSize: '8pt' }}>
-              Address for Correspondence :
+            <td rowSpan={4} width="5%" style={{ ...ib, textAlign: 'center', fontSize: '16pt', padding: 3 }}>📍</td>
+            <td colSpan={3} style={{ ...ib, padding: '2px 4px', fontWeight: 700, fontSize: '8pt' }}>Address for Correspondence :</td>
+          </tr>
+          <tr>
+            <td style={{ ...ib, padding: '2px 4px' }}>
+              <div style={lbl}>House No./Building No.</div><div style={val}>{v(s.houseNo)}</div>
+            </td>
+            <td style={{ ...ib, padding: '2px 4px' }}>
+              <div style={lbl}>Stree/Colony</div><div style={val}>{v(s.street)}</div>
             </td>
           </tr>
           <tr>
-            <td style={{ ...innerBorder, padding: '2px 4px' }}>
-              <span style={labelStyle}>House No./Building No. </span>
-              <div style={valueStyle}>{v(s.houseNo)}</div>
+            <td style={{ ...ib, padding: '2px 4px' }}>
+              <div style={lbl}>City/Village/Suburb</div><div style={val}>{v(s.city)}</div>
             </td>
-            <td style={{ ...innerBorder, padding: '2px 4px' }}>
-              <span style={labelStyle}>Stree/Colony </span>
-              <div style={valueStyle}>{v(s.street)}</div>
+            <td style={{ ...ib, padding: '2px 4px' }}>
+              <div style={lbl}>Tahsil/Block</div><div style={val}>{v(s.tahsil)}</div>
             </td>
           </tr>
           <tr>
-            <td style={{ ...innerBorder, padding: '2px 4px' }}>
-              <span style={labelStyle}>City/Village/Suburb </span>
-              <div style={valueStyle}>{v(s.city)}</div>
+            <td style={{ ...ib, padding: '2px 4px' }}>
+              <div style={lbl}>District</div><div style={val}>{v(s.district)}</div>
             </td>
-            <td style={{ ...innerBorder, padding: '2px 4px' }}>
-              <span style={labelStyle}>Tahsil/Block </span>
-              <div style={valueStyle}>{v(s.tahsil)}</div>
+            <td style={{ ...ib, padding: '2px 4px' }}>
+              <div style={lbl}>Pin Code</div><div style={val}>{v(s.pinCode)}</div>
             </td>
           </tr>
           <tr>
-            <td style={{ ...innerBorder }} />
-            <td style={{ ...innerBorder, padding: '2px 4px' }}>
-              <span style={labelStyle}>District </span>
-              <div style={valueStyle}>{v(s.district)}</div>
+            <td style={{ ...ib }} />
+            <td style={{ ...ib, padding: '2px 4px' }}>
+              <div style={lbl}>Educational Qualification: (What do you do?)</div><div style={val}>{v(s.qualification)}</div>
             </td>
-            <td style={{ ...innerBorder, padding: '2px 4px' }}>
-              <span style={labelStyle}>Pin Code </span>
-              <div style={valueStyle}>{v(s.pinCode)}</div>
-            </td>
-          </tr>
-          <tr>
-            <td style={{ ...innerBorder }} />
-            <td style={{ ...innerBorder, padding: '2px 4px' }}>
-              <span style={labelStyle}>Educational Qualification: (What do you do?) </span>
-              <div style={valueStyle}>{v(s.qualification)}</div>
-            </td>
-            <td style={{ ...innerBorder, padding: '2px 4px' }}>
-              <span style={labelStyle}>Cast/Category </span>
-              <div style={valueStyle}>{v(s.category)}</div>
+            <td style={{ ...ib, padding: '2px 4px' }}>
+              <div style={lbl}>Cast/Category</div><div style={val}>{v(s.category)}</div>
             </td>
           </tr>
         </tbody>
       </table>
 
-      {/* ── FEES AGREEMENT + SIGNATURE (Application only) ─────── */}
-      {!isExam && (
-        <table width="100%" style={{ borderCollapse: 'collapse', ...outerBorder, borderTop: 'none' }}>
+      {/* ── FEES AGREEMENT / SIGNATURE ─────────────────────── */}
+      {!isExam ? (
+        <table width="100%" style={{ borderCollapse: 'collapse', ...ob, borderTop: 'none' }}>
           <tbody>
             <tr>
-              <td width="5%" style={{ ...innerBorder, textAlign: 'center', fontSize: '18pt', padding: 4 }} rowSpan={2}>🎓</td>
-              <td colSpan={2} style={{ ...innerBorder, padding: '3px 4px', fontSize: '7.5pt' }}>
+              <td width="5%" style={{ ...ib, textAlign: 'center', fontSize: '16pt', padding: 3 }} rowSpan={2}>🎓</td>
+              <td colSpan={2} style={{ ...ib, padding: '3px 4px', fontSize: '7.5pt' }}>
                 I Agree To Pay Rs.&nbsp;
-                <span style={{ borderBottom: '1px solid #555', display: 'inline-block', minWidth: 80 }}>
-                  {s.totalFees ? s.totalFees : ''}
-                </span>
+                <span style={{ borderBottom: '1px solid #555', display: 'inline-block', minWidth: 80 }}>{s.totalFees || ''}</span>
                 &nbsp;(In Words)&nbsp;
-                <span style={{ borderBottom: '1px solid #555', display: 'inline-block', minWidth: 160 }}>&nbsp;</span>
+                <span style={{ borderBottom: '1px solid #555', display: 'inline-block', minWidth: 150 }}>&nbsp;</span>
                 <br />
                 <span style={{ fontSize: '7pt' }}>For Full Course And These Are Not To Be Refunded Under Any Circumstances.</span>
               </td>
-              <td width="18%" style={{ ...innerBorder, padding: '2px 4px', textAlign: 'center', fontSize: '7pt', fontWeight: 600 }}>
+              <td width="18%" style={{ ...ib, padding: '2px 4px', textAlign: 'center', fontSize: '7pt', fontWeight: 600, verticalAlign: 'bottom' }}>
                 Signature of<br />Applicant<br /><br /><br />
-                <div style={{ borderTop: '1px solid #555', marginTop: 8 }} />
+                <div style={{ borderTop: '1px solid #555', marginTop: 6 }} />
               </td>
             </tr>
             <tr>
-              <td style={{ ...innerBorder, background: '#1565c0', color: '#fff', fontWeight: 700, fontSize: '8pt', padding: '3px 6px', textAlign: 'center' }}>
-                TOTAL FEES
-              </td>
-              <td style={{ ...innerBorder, background: '#1565c0', color: '#fff', fontWeight: 700, fontSize: '8pt', padding: '3px 6px', textAlign: 'center' }}>
-                INSTALLMENT
-              </td>
-              <td style={{ ...innerBorder, background: '#1565c0', padding: 0 }} />
+              <td style={{ ...ib, background: '#1565c0', color: '#fff', fontWeight: 700, fontSize: '8pt', padding: '3px 6px', textAlign: 'center' }}>TOTAL FEES</td>
+              <td style={{ ...ib, background: '#1565c0', color: '#fff', fontWeight: 700, fontSize: '8pt', padding: '3px 6px', textAlign: 'center' }}>INSTALLMENT</td>
+              <td style={{ ...ib, background: '#1565c0' }} />
             </tr>
           </tbody>
         </table>
-      )}
-
-      {/* Exam form — signature area */}
-      {isExam && (
-        <table width="100%" style={{ borderCollapse: 'collapse', ...outerBorder, borderTop: 'none' }}>
-          <tbody>
-            <tr>
-              <td width="5%" style={{ ...innerBorder, textAlign: 'center', fontSize: '18pt', padding: 4 }}>🎓</td>
-              <td style={{ ...innerBorder, padding: '20px 4px', minHeight: 50 }}>&nbsp;</td>
-              <td width="22%" style={{ ...innerBorder, padding: '2px 4px', textAlign: 'center', fontSize: '7pt', fontWeight: 600, verticalAlign: 'bottom' }}>
-                Signature of<br />Applicant<br /><br />
-                <div style={{ borderTop: '1px solid #555', marginTop: 8 }} />
-              </td>
-            </tr>
-          </tbody>
+      ) : (
+        <table width="100%" style={{ borderCollapse: 'collapse', ...ob, borderTop: 'none' }}>
+          <tbody><tr>
+            <td width="5%" style={{ ...ib, textAlign: 'center', fontSize: '16pt', padding: 3 }}>🎓</td>
+            <td style={{ ...ib, padding: '18px 4px' }}>&nbsp;</td>
+            <td width="20%" style={{ ...ib, padding: '2px 4px', textAlign: 'center', fontSize: '7pt', fontWeight: 600, verticalAlign: 'bottom' }}>
+              Signature of<br />Applicant<br /><br />
+              <div style={{ borderTop: '1px solid #555', marginTop: 6 }} />
+            </td>
+          </tr></tbody>
         </table>
       )}
 
-      {/* ── BOTTOM SECTION ────────────────────────────────────── */}
-      <table width="100%" style={{ borderCollapse: 'collapse', ...outerBorder, borderTop: 'none', marginBottom: 0 }}>
+      {/* ── BOTTOM INFO ROW ────────────────────────────────── */}
+      <table width="100%" style={{ borderCollapse: 'collapse', ...ob, borderTop: 'none' }}>
         <tbody>
           {!isExam && (
-            <tr>
-              <td width="35%" style={{ ...innerBorder, padding: '2px 6px' }}>
-                <span style={labelStyle}>Admission Date: </span>
-                <span style={{ ...valueStyle }}>{fmtDate(s.admissionDate)}</span>
-              </td>
-              <td style={{ ...innerBorder, padding: '2px 6px' }}>
-                <span style={labelStyle}>Course Duration: </span>
-                <span style={valueStyle}>{v(s.courseDuration)}</span>
-              </td>
-            </tr>
-          )}
-          {!isExam && (
-            <tr>
-              <td colSpan={2} style={{ ...innerBorder, padding: '2px 6px' }}>
-                <span style={{ ...labelStyle, color: '#c62828', fontWeight: 700 }}>*Certificate Issued : </span>
-                <span style={{ borderBottom: '1px solid #aaa', display: 'inline-block', minWidth: 300 }}>&nbsp;</span>
-              </td>
-            </tr>
+            <>
+              <tr>
+                <td width="38%" style={{ ...ib, padding: '2px 6px' }}>
+                  <span style={lbl}>Admission Date: </span><span style={val}>{fmtDate(s.admissionDate)}</span>
+                </td>
+                <td style={{ ...ib, padding: '2px 6px' }}>
+                  <span style={lbl}>Course Duration: </span><span style={val}>{v(s.courseDuration)}</span>
+                </td>
+              </tr>
+              <tr>
+                <td colSpan={2} style={{ ...ib, padding: '2px 6px' }}>
+                  <span style={{ ...lbl, color: '#c62828', fontWeight: 700 }}>*Certificate Issued : </span>
+                  <span style={{ borderBottom: '1px solid #aaa', display: 'inline-block', minWidth: 280 }}>&nbsp;</span>
+                </td>
+              </tr>
+            </>
           )}
           <tr>
-            <td colSpan={2} style={{ ...innerBorder, padding: '2px 6px' }}>
-              <span style={labelStyle}>Batch Time: </span>
-              <span style={valueStyle}>{v(s.batchTime)}</span>
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-              <span style={{ background: '#1a7a3c', color: '#fff', fontWeight: 700, fontSize: '8pt', padding: '2px 14px', borderRadius: 2 }}>
+            <td colSpan={2} style={{ ...ib, padding: '2px 6px' }}>
+              <span style={lbl}>Batch Time: </span>
+              <span style={val}>{v(s.batchTime)}</span>
+              &nbsp;&nbsp;&nbsp;&nbsp;
+              <span style={{ background: '#1a7a3c', color: '#fff', fontWeight: 700, fontSize: '7.5pt', padding: '2px 12px', borderRadius: 2 }}>
                 *FOR OFFICE USE ONLY*
               </span>
             </td>
@@ -369,9 +319,9 @@ function FormPage({ student: s, isExam }) {
         </tbody>
       </table>
 
-      {/* ── FEES TABLE (Application only) ─────────────────────── */}
+      {/* ── FEES TABLE (Application only) ──────────────────── */}
       {!isExam && (
-        <table width="100%" style={{ borderCollapse: 'collapse', ...outerBorder, borderTop: 'none' }}>
+        <table width="100%" style={{ borderCollapse: 'collapse', ...ob, borderTop: 'none' }}>
           <thead>
             <tr style={{ background: '#111', color: '#fff' }}>
               {['Course Fees Paid', 'Receipt No', 'Receipt Date', 'Balance Amount'].map(h => (
@@ -380,50 +330,43 @@ function FormPage({ student: s, isExam }) {
             </tr>
           </thead>
           <tbody>
-            {/* First row pre-filled with first payment */}
             <tr>
-              <td style={{ ...innerBorder, padding: '2px 4px', fontSize: '8pt', fontWeight: 700, minHeight: 16, height: 18 }}>{s.feesPaid || ''}</td>
-              <td style={{ ...innerBorder, padding: '2px 4px', fontSize: '8pt', height: 18 }}>{v(s.receiptNumber)}</td>
-              <td style={{ ...innerBorder, padding: '2px 4px', fontSize: '8pt', height: 18 }}>{fmtDate(s.receiptDate)}</td>
-              <td style={{ ...innerBorder, padding: '2px 4px', fontSize: '8pt', fontWeight: 700, height: 18 }}>
+              <td style={{ ...ib, padding: '2px 4px', fontSize: '8pt', fontWeight: 700, height: 17 }}>{v(s.feesPaid)}</td>
+              <td style={{ ...ib, padding: '2px 4px', fontSize: '8pt', height: 17 }}>{v(s.receiptNumber)}</td>
+              <td style={{ ...ib, padding: '2px 4px', fontSize: '8pt', height: 17 }}>{fmtDate(s.receiptDate)}</td>
+              <td style={{ ...ib, padding: '2px 4px', fontSize: '8pt', fontWeight: 700, height: 17 }}>
                 {s.totalFees ? balance.toFixed(0) : ''}
               </td>
             </tr>
-            {/* Blank installment rows */}
-            {installmentRows.map((_, i) => (
+            {Array.from({ length: 8 }).map((_, i) => (
               <tr key={i}>
-                <td style={{ ...innerBorder, height: 18 }} />
-                <td style={{ ...innerBorder, height: 18 }} />
-                <td style={{ ...innerBorder, height: 18 }} />
-                <td style={{ ...innerBorder, height: 18 }} />
+                <td style={{ ...ib, height: 17 }} /><td style={{ ...ib, height: 17 }} />
+                <td style={{ ...ib, height: 17 }} /><td style={{ ...ib, height: 17 }} />
               </tr>
             ))}
           </tbody>
         </table>
       )}
 
-      {/* Exam form — FOR OFFICE USE ONLY blank area */}
+      {/* ── EXAM OFFICE USE ONLY ───────────────────────────── */}
       {isExam && (
-        <table width="100%" style={{ borderCollapse: 'collapse', ...outerBorder, borderTop: 'none' }}>
+        <table width="100%" style={{ borderCollapse: 'collapse', ...ob, borderTop: 'none' }}>
           <thead>
             <tr style={{ background: '#111', color: '#fff' }}>
-              <th colSpan={4} style={{ padding: '3px 4px', fontSize: '7.5pt', fontWeight: 700, textAlign: 'center' }}>
-                *FOR OFFICE USE ONLY*
-              </th>
+              <th colSpan={4} style={{ padding: '3px 4px', fontSize: '7.5pt', fontWeight: 700, textAlign: 'center' }}>*FOR OFFICE USE ONLY*</th>
             </tr>
           </thead>
           <tbody>
             {Array.from({ length: 6 }).map((_, i) => (
               <tr key={i}>
-                <td style={{ ...innerBorder, height: 18, width: '25%' }} />
-                <td style={{ ...innerBorder, height: 18, width: '25%' }} />
-                <td style={{ ...innerBorder, height: 18, width: '25%' }} />
-                <td style={{ ...innerBorder, height: 18, width: '25%' }} />
+                <td style={{ ...ib, height: 17, width: '25%' }} /><td style={{ ...ib, height: 17, width: '25%' }} />
+                <td style={{ ...ib, height: 17, width: '25%' }} /><td style={{ ...ib, height: 17, width: '25%' }} />
               </tr>
             ))}
           </tbody>
         </table>
       )}
+
     </div>
   );
 }
@@ -434,27 +377,31 @@ export default function StudentPrint({ student, onClose }) {
 
   return (
     <>
-      {/* Screen overlay — hidden when printing */}
+      {/* Screen overlay — print:hidden so it disappears when printing */}
       <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4 print:hidden">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
-          <h3 className="font-extrabold text-gray-900 text-base mb-2">Print Student Forms</h3>
-          <p className="text-sm text-gray-500 mb-1"><strong>Page 1</strong> — Application Form</p>
-          <p className="text-sm text-gray-500 mb-5"><strong>Page 2</strong> — Exam Form</p>
+          <h3 className="font-bold text-gray-900 mb-2" style={{ fontSize: 16 }}>Print Student Forms</h3>
+          <p className="text-slate-500 mb-1" style={{ fontSize: 13 }}><strong>Page 1</strong> — Application Form</p>
+          <p className="text-slate-500 mb-5" style={{ fontSize: 13 }}><strong>Page 2</strong> — Exam Form</p>
           <div className="flex gap-3 justify-end">
             <button onClick={onClose}
-              className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+              className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50">
               Cancel
             </button>
-            <button onClick={() => window.print()} className="btn-primary btn-md text-sm">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            <button onClick={() => window.print()} className="admin-btn-primary">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
               Print
             </button>
           </div>
         </div>
       </div>
 
-      {/* Printable document — hidden on screen, shown only when printing */}
-      <div id="student-print-doc" className="hidden print:block">
+      {/*
+        CRITICAL: use inline style={{ display:'none' }} — NOT className="hidden".
+        Tailwind's `hidden` = display:none !important which @media print cannot override.
+        Inline style has no !important so the @media print rule can show this element.
+      */}
+      <div id="student-print-doc" style={{ display: 'none' }}>
         <FormPage student={student} isExam={false} />
         <FormPage student={student} isExam={true} />
       </div>

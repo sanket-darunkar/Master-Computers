@@ -195,27 +195,38 @@
    STUDENT PRINT STYLES
    Two A4 pages: Page 1 = Admission Form, Page 2 = Exam Form
    Only #student-print-doc is printed — all admin UI is hidden.
+
+   IMPORTANT: StudentPrint.jsx uses style={{ display:'none' }} (no !important)
+   on #student-print-doc so this @media print rule can override it.
+   Never use Tailwind's `hidden` class there — it uses display:none !important
+   which would block the print rule from firing.
 ───────────────────────────────────────────────────────────── */
 @media print {
-  /* If student print doc exists, use its own isolated print rules */
-  body:has(#student-print-doc) > * { display: none !important; }
-  body:has(#student-print-doc) #student-print-doc { display: block !important; }
+  /* Hide the entire page body content */
+  body > * { display: none !important; }
 
+  /* Show ONLY the print document */
   #student-print-doc {
     display: block !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
   }
 
   .print-page {
     width: 210mm;
-    min-height: 297mm;
-    padding: 12mm 14mm;
+    min-height: 270mm;          /* slightly under 297mm so content is not clipped */
+    max-height: 297mm;
+    padding: 10mm 12mm;
     box-sizing: border-box;
-    page-break-after: always;
-    page-break-inside: avoid;
+    page-break-after: always;   /* force a new page after each form */
+    /* NO page-break-inside:avoid — that prevents Chrome from paginating */
     background: white !important;
-    font-size: 9pt;
-    font-family: 'Inter', sans-serif;
+    font-size: 8.5pt;
+    font-family: Arial, sans-serif;
     color: #111;
+    overflow: hidden;
   }
 
   .print-page:last-child {
@@ -227,10 +238,12 @@
     margin: 0;
   }
 
-  /* Ensure colours print */
+  /* Force colour printing for backgrounds, borders, images */
+  .print-page,
   .print-page * {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
 }
 
