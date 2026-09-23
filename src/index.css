@@ -194,39 +194,45 @@
 /* ─────────────────────────────────────────────────────────────
    STUDENT PRINT STYLES
    Two A4 pages: Page 1 = Admission Form, Page 2 = Exam Form
-   Only #student-print-doc is printed — all admin UI is hidden.
 
-   IMPORTANT: StudentPrint.jsx uses style={{ display:'none' }} (no !important)
-   on #student-print-doc so this @media print rule can override it.
-   Never use Tailwind's `hidden` class there — it uses display:none !important
-   which would block the print rule from firing.
+   HOW IT WORKS:
+   StudentPrint.jsx renders #student-print-doc with inline
+   style={{ display:'none' }} (NOT Tailwind `hidden` which uses
+   display:none !important and cannot be overridden by @media print).
+   The screen overlay uses print:hidden so it disappears.
 ───────────────────────────────────────────────────────────── */
 @media print {
-  /* Hide the entire page body content */
-  body > * { display: none !important; }
-
-  /* Show ONLY the print document */
-  #student-print-doc {
-    display: block !important;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
+  /* 1. Hide every direct child of body */
+  body > * {
+    display: none !important;
   }
 
+  /* 2. Show #student-print-doc — it is a direct child of body
+        because it is rendered inside the fixed overlay portal.
+        Higher specificity + later declaration wins over the rule above. */
+  body > #student-print-doc,
+  #student-print-doc {
+    display: block !important;
+    position: static !important;   /* NOT fixed — fixed clips to one viewport */
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 3. Each page fills one A4 sheet */
   .print-page {
     width: 210mm;
-    min-height: 270mm;          /* slightly under 297mm so content is not clipped */
-    max-height: 297mm;
     padding: 10mm 12mm;
     box-sizing: border-box;
-    page-break-after: always;   /* force a new page after each form */
-    /* NO page-break-inside:avoid — that prevents Chrome from paginating */
+    page-break-after: always;
+    /* NO page-break-inside:avoid — it prevents Chrome from paginating */
     background: white !important;
     font-size: 8.5pt;
     font-family: Arial, sans-serif;
     color: #111;
-    overflow: hidden;
+    display: block !important;
   }
 
   .print-page:last-child {
@@ -238,7 +244,7 @@
     margin: 0;
   }
 
-  /* Force colour printing for backgrounds, borders, images */
+  /* Force colour/background printing */
   .print-page,
   .print-page * {
     -webkit-print-color-adjust: exact !important;

@@ -16,6 +16,7 @@
  * Chrome can paginate across the full A4 height.
  */
 import React from 'react';
+import { createPortal } from 'react-dom';
 
 function fmtDate(iso) {
   if (!iso) return '';
@@ -397,14 +398,24 @@ export default function StudentPrint({ student, onClose }) {
       </div>
 
       {/*
-        CRITICAL: use inline style={{ display:'none' }} — NOT className="hidden".
-        Tailwind's `hidden` = display:none !important which @media print cannot override.
-        Inline style has no !important so the @media print rule can show this element.
+        Render the print document as a DIRECT CHILD OF <body> via a React portal.
+        This is essential: body > * { display:none } in @media print hides #root
+        (which contains the entire admin app). By portalling to document.body,
+        #student-print-doc becomes a direct body child and the CSS rule
+        body > #student-print-doc { display:block !important } correctly
+        shows it while everything else (including #root) stays hidden.
+
+        inline style={{ display:'none' }} — NOT className="hidden".
+        Tailwind hidden = display:none !important which @media print cannot override.
+        Inline style has no !important so @media print can override it.
       */}
-      <div id="student-print-doc" style={{ display: 'none' }}>
-        <FormPage student={student} isExam={false} />
-        <FormPage student={student} isExam={true} />
-      </div>
+      {createPortal(
+        <div id="student-print-doc" style={{ display: 'none' }}>
+          <FormPage student={student} isExam={false} />
+          <FormPage student={student} isExam={true} />
+        </div>,
+        document.body
+      )}
     </>
   );
 }
