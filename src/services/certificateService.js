@@ -45,8 +45,10 @@
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
-/** How long (ms) to wait before treating the request as timed-out */
-const REQUEST_TIMEOUT_MS = 15_000;
+/** How long (ms) to wait before treating the request as timed-out.
+ *  Set to 90 s to handle Render free-tier cold starts (spin-up takes ~50–90 s
+ *  after a period of inactivity). */
+const REQUEST_TIMEOUT_MS = 90_000;
 
 // ── Error types ──────────────────────────────────────────────
 export const CertErrorType = Object.freeze({
@@ -87,7 +89,7 @@ async function fetchWithTimeout(url, options = {}) {
     if (err.name === 'AbortError') {
       throw new CertificateError(
         CertErrorType.TIMEOUT,
-        'Request timed out. Please check your connection and try again.'
+        'Server is starting up — please wait a moment and try again. (This can take up to 90 seconds after a period of inactivity.)'
       );
     }
     // fetch itself threw — network unreachable, DNS failure, etc.

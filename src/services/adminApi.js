@@ -33,7 +33,7 @@
  */
 
 const BASE_URL   = import.meta.env.VITE_API_BASE_URL ?? '';
-const TIMEOUT_MS = 30_000; // increased to 30 s to allow photo uploads on slow connections
+const TIMEOUT_MS = 90_000; // 90 s — handles Render free-tier cold starts (~50–90 s spin-up)
 
 // ── Storage key ──────────────────────────────────────────────
 export const AUTH_TOKEN_KEY = 'mca_admin_token';
@@ -82,7 +82,7 @@ async function adminFetch(path, options = {}) {
   } catch (err) {
     clearTimeout(timerId);
     if (err.name === 'AbortError') {
-      throw new AdminApiError(0, 'Request timed out. Please try again.');
+      throw new AdminApiError(0, 'Server is starting up — please wait a moment and try again. (This can take up to 90 seconds after a period of inactivity.)');
     }
     throw new AdminApiError(0, 'Cannot connect to server. Please check your connection.');
   } finally {
@@ -141,7 +141,7 @@ async function adminFetchMultipart(path, method, formData) {
   } catch (err) {
     clearTimeout(timerId);
     if (err.name === 'AbortError') {
-      throw new AdminApiError(0, 'Request timed out. Please try again.');
+      throw new AdminApiError(0, 'Server is starting up — please wait a moment and try again. (This can take up to 90 seconds after a period of inactivity.)');
     }
     throw new AdminApiError(0, 'Cannot connect to server. Please check your connection.');
   } finally {

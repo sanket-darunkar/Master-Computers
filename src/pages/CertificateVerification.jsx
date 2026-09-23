@@ -83,7 +83,7 @@ function LoadingState() {
       </div>
       <div className="text-center">
         <p className="font-bold text-gray-900 text-lg">Certificate तपासत आहे…</p>
-        <p className="text-gray-500 text-sm mt-1 font-devanagari">कृपया थांबा</p>
+        <p className="text-gray-500 text-sm mt-1 font-devanagari">कृपया थांबा — सर्व्हर सुरू होत आहे, यास 30–90 सेकंद लागू शकतात.</p>
       </div>
     </div>
   );
