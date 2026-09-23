@@ -15,7 +15,7 @@ const LocationPinIcon = () => (
 const TRUST_ITEMS = [
   { icon: '🎓', text: 'MS-CIT Centre' },
   { icon: '💻', text: 'Practical Learning' },
-  { icon: '🇲🇷', text: 'Marathi Friendly', marathi: true },
+  { icon: '🚩', text: 'Marathi Friendly', marathi: true },
   { icon: '🤝', text: 'Student Support' },
 ];
 
