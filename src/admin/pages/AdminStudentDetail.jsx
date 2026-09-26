@@ -38,6 +38,16 @@ function Section({ title, children }) {
 
 const EXAM_FORM_STATUSES = ['Exam Form Submitted', 'Exam Form Pending'];
 
+// Helper: get per-course status from the map, falling back to the
+// legacy top-level examForm if the map is absent (old data).
+function getCourseStatus(student, courseName) {
+  if (student.courseExamStatuses && student.courseExamStatuses[courseName] !== undefined) {
+    return student.courseExamStatuses[courseName];
+  }
+  // Fallback for rows created before the per-course feature
+  return student.examForm || 'Exam Form Pending';
+}
+
 const IcoEdit  = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>;
 const IcoPrint = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>;
 const IcoChev  = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>;
@@ -64,10 +74,13 @@ export default function AdminStudentDetail({ id }) {
   const confirmStatus = async () => {
     setStatusLoading(true);
     try {
-      const updated = await updateStudentStatus(id, newStatus);
+      const updated = await updateStudentStatus(id, newStatus.examForm, newStatus.courseName);
       setStudent(updated);
       setStatusDialog(false);
-      showToast(`Exam Form updated to "${newStatus}".`, 'success');
+      const label = newStatus.courseName
+        ? `${newStatus.courseName}: "${newStatus.examForm}"`
+        : `All courses: "${newStatus.examForm}"`;
+      showToast(`Exam Form updated — ${label}`, 'success');
     } catch (err) { showToast(err.message || 'Failed to update Exam Form.', 'error'); }
     finally { setStatusLoading(false); }
   };
@@ -93,7 +106,6 @@ export default function AdminStudentDetail({ id }) {
 
   const fullName = [student.firstName, student.middleName, student.surname].filter(Boolean).join(' ');
   const balance  = (parseFloat(student.totalFees) || 0) - (parseFloat(student.feesPaid) || 0);
-  const others   = EXAM_FORM_STATUSES.filter(s => s !== student.examForm);
 
   return (
     <AdminLayout title="Student Details" subtitle={`${fullName} · ${student.studentId}`}>
@@ -102,9 +114,13 @@ export default function AdminStudentDetail({ id }) {
 
       <ConfirmDialog
         open={statusDialog}
-        title={`Change Exam Form to "${newStatus}"?`}
-        message={`This will update the student's Exam Form status to "${newStatus}".`}
-        confirmLabel={`Set ${newStatus}`}
+        title={newStatus.courseName
+          ? `Change "${newStatus.courseName}" to "${newStatus.examForm}"?`
+          : `Change all courses to "${newStatus.examForm}"?`}
+        message={newStatus.courseName
+          ? `This will update the Exam Form status for "${newStatus.courseName}" only.`
+          : `This will update Exam Form status for all enrolled courses.`}
+        confirmLabel={`Set ${newStatus.examForm}`}
         confirmClass="bg-blue-600 hover:bg-blue-700 text-white"
         loading={statusLoading}
         onConfirm={confirmStatus}
@@ -126,20 +142,39 @@ export default function AdminStudentDetail({ id }) {
         <button onClick={() => setShowPrint(true)} className="admin-btn-secondary">
           <IcoPrint /> Print Forms
         </button>
-        {/* Exam Form dropdown */}
-        <div className="relative group">
-          <button className="admin-btn-secondary flex items-center gap-2">
-            Change Exam Form <IcoChev />
-          </button>
-          <div className="admin-status-menu-panel opacity-0 invisible group-hover:opacity-100 group-hover:visible focus-within:opacity-100 focus-within:visible transition-all duration-150">
-            {others.map(s => (
-              <button key={s} onClick={() => { setNewStatus(s); setStatusDialog(true); }}
-                className={`admin-status-menu-item ${s === 'Exam Form Submitted' ? 'text-green-700 hover:bg-green-50' : 'text-yellow-700 hover:bg-yellow-50'}`}>
-                Set {s}
+        {/* Per-course Exam Form dropdowns */}
+        {(Array.isArray(student.courses) && student.courses.length > 0
+          ? student.courses
+          : student.course ? [student.course] : []
+        ).map(courseName => {
+          const current = getCourseStatus(student, courseName);
+          const others  = EXAM_FORM_STATUSES.filter(s => s !== current);
+          return (
+            <div key={courseName} className="relative group">
+              <button className="admin-btn-secondary flex items-center gap-2 text-xs">
+                <span className="max-w-[120px] truncate font-semibold">{courseName}</span>
+                <IcoChev />
               </button>
-            ))}
-          </div>
-        </div>
+              <div className="admin-status-menu-panel opacity-0 invisible group-hover:opacity-100 group-hover:visible focus-within:opacity-100 focus-within:visible transition-all duration-150 min-w-[200px]">
+                <div className="px-3 py-1.5 text-xs text-gray-400 font-semibold border-b border-gray-100 truncate">
+                  {courseName}
+                </div>
+                {others.map(s => (
+                  <button
+                    key={s}
+                    onClick={() => {
+                      setNewStatus({ examForm: s, courseName });
+                      setStatusDialog(true);
+                    }}
+                    className={`admin-status-menu-item ${s === 'Exam Form Submitted' ? 'text-green-700 hover:bg-green-50' : 'text-yellow-700 hover:bg-yellow-50'}`}
+                  >
+                    Set {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Profile card */}
@@ -200,13 +235,27 @@ export default function AdminStudentDetail({ id }) {
             <Section title="Admission">
               <Row label="Course(s)"      value={
                 Array.isArray(student.courses) && student.courses.length > 0
-                  ? student.courses.map((c, i) => <div key={i}>{c}</div>)
+                  ? student.courses.map((c, i) => (
+                      <div key={i} className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span>{c}</span>
+                        <StatusBadge status={getCourseStatus(student, c)} />
+                      </div>
+                    ))
                   : f(student.course)
               } />
               <Row label="Admission Date" value={fmtDate(student.admissionDate)} />
               <Row label="Duration"       value={f(student.courseDuration)} />
               <Row label="Batch Time"     value={f(student.batchTime)} />
-              <Row label="Exam Form"      value={<StatusBadge status={student.examForm} />} />
+              <Row label="Exam Form"      value={
+                student.courseExamStatuses && Object.keys(student.courseExamStatuses).length > 0
+                  ? Object.entries(student.courseExamStatuses).map(([course, status]) => (
+                      <div key={course} className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="text-xs text-gray-500">{course}:</span>
+                        <StatusBadge status={status} />
+                      </div>
+                    ))
+                  : <StatusBadge status={student.examForm} />
+              } />
             </Section>
             <Section title="Fees">
               <Row label="Total Fees"     value={student.totalFees ? `₹ ${student.totalFees}` : undefined} />
