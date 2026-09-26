@@ -367,13 +367,22 @@ function StudentDashboard({ student, onLogout }) {
       {/* Courses */}
       <InfoCard icon={<IconBook />} title="Enrolled Course(s)">
         {courseList.length > 0 ? (
-          <ul className="space-y-2">
-            {courseList.map((c, i) => (
-              <li key={i} className="flex items-center gap-2 text-sm font-semibold text-gray-800">
-                <span className="w-2 h-2 rounded-full bg-primary-500 flex-shrink-0" aria-hidden="true" />
-                {c}
-              </li>
-            ))}
+          <ul className="space-y-3">
+            {courseList.map((c, i) => {
+              // Per-course status from map; fallback to legacy overall field
+              const courseStatus = (student.courseExamStatuses && student.courseExamStatuses[c] !== undefined)
+                ? student.courseExamStatuses[c]
+                : student.examForm || 'Exam Form Pending';
+              return (
+                <li key={i} className="flex items-center justify-between gap-3 flex-wrap">
+                  <span className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+                    <span className="w-2 h-2 rounded-full bg-primary-500 flex-shrink-0" aria-hidden="true" />
+                    {c}
+                  </span>
+                  <ExamFormBadge value={courseStatus} />
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <p className="text-gray-400 text-sm font-devanagari">कोणताही Course enrolled नाही.</p>
@@ -410,7 +419,28 @@ function StudentDashboard({ student, onLogout }) {
 
       {/* Exam Form Status */}
       <InfoCard icon={<IconClipboard />} title="Exam Form Status">
-        {student.examForm ? (
+        {student.courseExamStatuses && Object.keys(student.courseExamStatuses).length > 0 ? (
+          // Per-course view
+          <div className="space-y-3">
+            {Object.entries(student.courseExamStatuses).map(([course, status]) => (
+              <div key={course}>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{course}</p>
+                <ExamFormBadge value={status} />
+                {status === 'Exam Form Pending' && (
+                  <p className="text-yellow-700 text-xs mt-1 font-devanagari">
+                    अजून Submit झालेला नाही. Academy शी संपर्क करा.
+                  </p>
+                )}
+                {status === 'Exam Form Submitted' && (
+                  <p className="text-green-700 text-xs mt-1 font-devanagari">
+                    यशस्वीरित्या Submit झाला आहे. 🎉
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : student.examForm ? (
+          // Legacy single-status view
           <>
             <div className="mb-3">
               <ExamFormBadge value={student.examForm} />

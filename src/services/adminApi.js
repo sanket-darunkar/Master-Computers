@@ -336,13 +336,26 @@ export async function updateStudent(id, data, photoFile = null) {
 
 /**
  * PATCH /api/admin/students/{id}/status
- * @param {number} id
- * @param {string} examForm  – 'Exam Form Submitted' | 'Exam Form Pending'
+ *
+ * Per-course update (preferred):
+ *   updateStudentStatus(id, 'Exam Form Submitted', 'DCA')
+ *   → only the DCA entry in courseExamStatuses is changed.
+ *
+ * Global update (backward compat, omit courseName):
+ *   updateStudentStatus(id, 'Exam Form Submitted')
+ *   → every enrolled course is set to the given status.
+ *
+ * @param {number}      id
+ * @param {string}      examForm    – 'Exam Form Submitted' | 'Exam Form Pending'
+ * @param {string|null} courseName  – specific course to update (omit for global)
  */
-export async function updateStudentStatus(id, examForm) {
+export async function updateStudentStatus(id, examForm, courseName = null) {
+  const body = courseName
+    ? { examForm, courseName }
+    : { examForm };
   const res = await adminFetch(`/api/admin/students/${id}/status`, {
     method: 'PATCH',
-    body  : JSON.stringify({ examForm }),
+    body  : JSON.stringify(body),
   });
   return res.data;
 }
