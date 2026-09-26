@@ -12,7 +12,12 @@ import { adminNavigate } from '../AdminApp';
 
 function fmtDate(iso) {
   if (!iso) return '—';
-  try { return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }); }
+  try {
+    // Display as MONTH-YEAR, e.g. "September-2026"
+    const d = new Date(iso);
+    const month = d.toLocaleDateString('en-IN', { month: 'long' });
+    return `${month}-${d.getFullYear()}`;
+  }
   catch { return iso; }
 }
 function fmtDateTime(iso) {
@@ -258,7 +263,7 @@ export default function AdminCertDetail({ id }) {
           <Row label="Certificate No."  value={cert.certificateNumber} />
           <Row label="Institution"      value={cert.institutionName} />
           <Row label="Course"           value={cert.courseName} />
-          <Row label="Issue Date"       value={fmtDate(cert.issueDate)} />
+          <Row label="Exam Date"       value={fmtDate(cert.issueDate)} />
           <Row label="Duration"         value={cert.duration} />
           <Row label="Marks"            value={cert.marks} />
           <Row label="Grade"            value={cert.grade} />

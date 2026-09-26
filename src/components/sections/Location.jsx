@@ -172,7 +172,7 @@ export default function Location() {
           Wathoda आणि आसपासच्या विद्यार्थ्यांसाठी Computer Classes
         </h3>
         <p className="text-gray-700 font-devanagari text-sm leading-relaxed">
-          <strong>Master Computer Academy</strong> हे Wathoda, Wathoda Layout, Dighori आणि Nagpur
+          <strong>Master Computer Academy</strong> हे Wathoda, Wathoda Layout आणि Nagpur
           च्या विद्यार्थ्यांसाठी सर्वात जवळचे आणि विश्वासाचे Computer Training Centre आहे.
           आम्ही <strong>MS-CIT classes</strong>, Programming, MS Office आणि इतर computer courses
           Wathoda Police Station जवळ उपलब्ध करतो.

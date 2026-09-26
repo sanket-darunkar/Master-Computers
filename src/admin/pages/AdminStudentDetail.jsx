@@ -36,7 +36,7 @@ function Section({ title, children }) {
   );
 }
 
-const STATUSES = ['ACTIVE', 'INACTIVE', 'COMPLETED', 'DROPPED'];
+const EXAM_FORM_STATUSES = ['Exam Form Submitted', 'Exam Form Pending'];
 
 const IcoEdit  = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>;
 const IcoPrint = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>;
@@ -67,8 +67,8 @@ export default function AdminStudentDetail({ id }) {
       const updated = await updateStudentStatus(id, newStatus);
       setStudent(updated);
       setStatusDialog(false);
-      showToast(`Status changed to ${newStatus}.`, 'success');
-    } catch (err) { showToast(err.message || 'Failed to change status.', 'error'); }
+      showToast(`Exam Form updated to "${newStatus}".`, 'success');
+    } catch (err) { showToast(err.message || 'Failed to update Exam Form.', 'error'); }
     finally { setStatusLoading(false); }
   };
 
@@ -93,7 +93,7 @@ export default function AdminStudentDetail({ id }) {
 
   const fullName = [student.firstName, student.middleName, student.surname].filter(Boolean).join(' ');
   const balance  = (parseFloat(student.totalFees) || 0) - (parseFloat(student.feesPaid) || 0);
-  const others   = STATUSES.filter(s => s !== student.status);
+  const others   = EXAM_FORM_STATUSES.filter(s => s !== student.examForm);
 
   return (
     <AdminLayout title="Student Details" subtitle={`${fullName} · ${student.studentId}`}>
@@ -102,10 +102,10 @@ export default function AdminStudentDetail({ id }) {
 
       <ConfirmDialog
         open={statusDialog}
-        title={`Change Status to ${newStatus}?`}
-        message={newStatus === 'DROPPED' ? 'This will mark the student as dropped from the course.' : `Change this student's status to ${newStatus}?`}
+        title={`Change Exam Form to "${newStatus}"?`}
+        message={`This will update the student's Exam Form status to "${newStatus}".`}
         confirmLabel={`Set ${newStatus}`}
-        confirmClass={newStatus === 'DROPPED' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}
+        confirmClass="bg-blue-600 hover:bg-blue-700 text-white"
         loading={statusLoading}
         onConfirm={confirmStatus}
         onCancel={() => setStatusDialog(false)}
@@ -126,15 +126,15 @@ export default function AdminStudentDetail({ id }) {
         <button onClick={() => setShowPrint(true)} className="admin-btn-secondary">
           <IcoPrint /> Print Forms
         </button>
-        {/* Status dropdown */}
+        {/* Exam Form dropdown */}
         <div className="relative group">
           <button className="admin-btn-secondary flex items-center gap-2">
-            Change Status <IcoChev />
+            Change Exam Form <IcoChev />
           </button>
           <div className="admin-status-menu-panel opacity-0 invisible group-hover:opacity-100 group-hover:visible focus-within:opacity-100 focus-within:visible transition-all duration-150">
             {others.map(s => (
               <button key={s} onClick={() => { setNewStatus(s); setStatusDialog(true); }}
-                className={`admin-status-menu-item ${s === 'DROPPED' ? 'text-red-600 hover:bg-red-50' : s === 'ACTIVE' ? 'text-green-700 hover:bg-green-50' : ''}`}>
+                className={`admin-status-menu-item ${s === 'Exam Form Submitted' ? 'text-green-700 hover:bg-green-50' : 'text-yellow-700 hover:bg-yellow-50'}`}>
                 Set {s}
               </button>
             ))}
@@ -144,7 +144,7 @@ export default function AdminStudentDetail({ id }) {
 
       {/* Profile card */}
       <div className="admin-card overflow-hidden">
-        {/* Header */}
+        {/* Profile header */}
         <div className="admin-profile-header">
           <div className="flex-shrink-0">
             {student.studentPhotoUrl ? (
@@ -157,10 +157,14 @@ export default function AdminStudentDetail({ id }) {
           </div>
           <div className="flex-1 min-w-0">
             <div className="admin-profile-name">{fullName}</div>
-            <div className="admin-profile-sub">{f(student.course)}</div>
+            <div className="admin-profile-sub">
+              {Array.isArray(student.courses) && student.courses.length > 0
+                ? student.courses.join(' · ')
+                : f(student.course)}
+            </div>
             <div className="admin-profile-id">{student.studentId}</div>
           </div>
-          <div className="flex-shrink-0"><StatusBadge status={student.status} /></div>
+          <div className="flex-shrink-0"><StatusBadge status={student.examForm} /></div>
         </div>
 
         {/* Details grid */}
@@ -194,10 +198,15 @@ export default function AdminStudentDetail({ id }) {
               <Row label="PIN Code"       value={f(student.pinCode)} />
             </Section>
             <Section title="Admission">
-              <Row label="Course"         value={f(student.course)} />
+              <Row label="Course(s)"      value={
+                Array.isArray(student.courses) && student.courses.length > 0
+                  ? student.courses.map((c, i) => <div key={i}>{c}</div>)
+                  : f(student.course)
+              } />
               <Row label="Admission Date" value={fmtDate(student.admissionDate)} />
               <Row label="Duration"       value={f(student.courseDuration)} />
               <Row label="Batch Time"     value={f(student.batchTime)} />
+              <Row label="Exam Form"      value={<StatusBadge status={student.examForm} />} />
             </Section>
             <Section title="Fees">
               <Row label="Total Fees"     value={student.totalFees ? `₹ ${student.totalFees}` : undefined} />

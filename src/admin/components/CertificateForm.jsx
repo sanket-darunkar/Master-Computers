@@ -191,7 +191,7 @@ export default function CertificateForm({
       errs.courseName = 'Max 255 characters.';
 
     if (!values.issueDate)
-      errs.issueDate = 'Issue date is required.';
+      errs.issueDate = 'Exam date is required.';
 
     if (values.duration        && values.duration.trim().length        > 100) errs.duration        = 'Max 100 characters.';
     if (values.institutionName && values.institutionName.trim().length > 255) errs.institutionName = 'Max 255 characters.';
@@ -274,8 +274,8 @@ export default function CertificateForm({
           />
         </Field>
 
-        {/* Issue Date */}
-        <Field label="Issue Date" required error={errors.issueDate}>
+        {/* Exam Date */}
+        <Field label="Exam Date" required error={errors.issueDate}>
           <input
             type="date"
             value={values.issueDate}

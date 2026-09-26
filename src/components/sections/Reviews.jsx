@@ -10,78 +10,28 @@ const StarIcon = () => (
   </svg>
 );
 
-// Placeholder review structure shown when no real reviews exist yet
-const PLACEHOLDER_REVIEWS = [
-  {
-    id: 'p1',
-    name: '[विद्यार्थ्याचे नाव]',
-    course: 'MS-CIT',
-    rating: 5,
-    review: '[येथे खरी review येईल — academy owner कडून verified review मिळाल्यावर update करा]',
-    placeholder: true,
-  },
-  {
-    id: 'p2',
-    name: '[Student Name]',
-    course: 'MS Office',
-    rating: 5,
-    review: '[Add real verified student review here]',
-    placeholder: true,
-  },
-  {
-    id: 'p3',
-    name: '[विद्यार्थ्याचे नाव]',
-    course: 'Tally',
-    rating: 5,
-    review: '[येथे खरी review येईल]',
-    placeholder: true,
-  },
-];
-
-const displayReviews = REVIEWS.length > 0 ? REVIEWS : PLACEHOLDER_REVIEWS;
-
 export default function Reviews() {
-  const hasRealReviews = REVIEWS.length > 0;
-
   return (
     <SectionWrapper id="reviews" bg="white">
       <SectionHeading
         label="Student Reviews"
         title="विद्यार्थ्यांचे अनुभव"
-        subtitle="तुमचा अनुभव आमच्यासाठी महत्त्वाचा आहे ⭐"
+        subtitle="आमच्या विद्यार्थ्यांनी सांगितलेले त्यांचे खरे अनुभव ⭐"
         center
       />
 
-      {/* No real reviews notice (visible only when REVIEWS array is empty) */}
-      {!hasRealReviews && (
-        <div className="mb-8 bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center">
-          <p className="text-amber-800 text-sm font-devanagari">
-            <strong>Note for owner:</strong> खालील reviews placeholder आहेत.
-            Real verified student reviews <code className="text-xs">src/config/siteConfig.js</code> मधील
-            <code className="text-xs"> REVIEWS</code> array मध्ये add करा.
-          </p>
+      {/* Reviews grid */}
+      {REVIEWS.length > 0 ? (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+          {REVIEWS.map((review) => (
+            <ReviewCard key={review.id} review={review} />
+          ))}
+        </div>
+      ) : (
+        <div className="mb-10 text-center text-gray-400 py-10 font-devanagari">
+          Reviews लवकरच येतील…
         </div>
       )}
-
-      {/* Reviews grid */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
-        {displayReviews.map((review) => (
-          review.placeholder ? (
-            <div key={review.id} className="card p-6 border-2 border-dashed border-gray-200 opacity-50">
-              <div className="flex gap-0.5 mb-3">
-                {[1,2,3,4,5].map(i => <StarIcon key={i} />)}
-              </div>
-              <p className="text-gray-400 text-sm italic font-devanagari">"{review.review}"</p>
-              <div className="pt-3 mt-3 border-t border-gray-100">
-                <p className="text-gray-400 text-sm font-devanagari">{review.name}</p>
-                <p className="text-xs text-gray-400">{review.course}</p>
-              </div>
-            </div>
-          ) : (
-            <ReviewCard key={review.id} review={review} />
-          )
-        ))}
-      </div>
 
       {/* Google review CTA */}
       <div className="text-center bg-primary-50 rounded-3xl p-8 border border-primary-100">
@@ -101,9 +51,9 @@ export default function Reviews() {
             target="_blank"
             rel="noopener noreferrer"
             className="btn-primary btn-md inline-flex font-devanagari"
-            aria-label="View or leave a Google review for Master Computer Academy"
+            aria-label="View or leave a review for Master Computer Academy"
           >
-            ⭐ Google वर Review द्या
+            ⭐ Review द्या
           </a>
         ) : (
           <button

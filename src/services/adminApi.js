@@ -286,7 +286,7 @@ export async function getVerificationHistory(id, { page = 0, size = 10 } = {}) {
 
 /**
  * GET /api/admin/students
- * Params: { page, size, search, status, course }
+ * Params: { page, size, search, examForm, course }
  * Returns: PagedResponse<StudentResponse>
  */
 export async function listStudents({ page = 0, size = 15, search = '', status = '', course = '' } = {}) {
@@ -309,7 +309,7 @@ export async function getStudent(id) {
 
 /**
  * POST /api/admin/students  (multipart/form-data)
- * @param {object}   data      – student fields
+ * @param {object}   data      – student fields; includes `courses` string[] and `course` string (first course, backward compat)
  * @param {File|null} photoFile – optional student photo
  */
 export async function createStudent(data, photoFile = null) {
@@ -337,12 +337,12 @@ export async function updateStudent(id, data, photoFile = null) {
 /**
  * PATCH /api/admin/students/{id}/status
  * @param {number} id
- * @param {string} status  – 'ACTIVE' | 'INACTIVE' | 'COMPLETED' | 'DROPPED'
+ * @param {string} examForm  – 'Exam Form Submitted' | 'Exam Form Pending'
  */
-export async function updateStudentStatus(id, status) {
+export async function updateStudentStatus(id, examForm) {
   const res = await adminFetch(`/api/admin/students/${id}/status`, {
     method: 'PATCH',
-    body  : JSON.stringify({ status }),
+    body  : JSON.stringify({ examForm }),
   });
   return res.data;
 }
