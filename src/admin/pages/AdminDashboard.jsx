@@ -4,7 +4,7 @@ import StatusBadge          from '../components/StatusBadge';
 import { listCertificates, listStudents } from '../../services/adminApi';
 import { adminNavigate }    from '../AdminApp';
 
-// ── Helpers ───────────────────────────────────────────────────
+const ADMIN_NAME = 'Ravi Lande';
 function fmtDate(iso) {
   if (!iso) return '—';
   try { return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }); }
@@ -247,7 +247,7 @@ export default function AdminDashboard() {
             <div>
               <p className="text-blue-200 text-sm font-medium mb-1">{todayLabel()}</p>
               <h2 className="text-2xl font-extrabold leading-tight">
-                {greeting.emoji} {greeting.text}, Admin
+                {greeting.emoji} {greeting.text}, {ADMIN_NAME}
               </h2>
               <p className="text-blue-200 text-sm mt-1">
                 {stuStats.total !== null
