@@ -14,6 +14,7 @@ const QUICK_LINKS = [
   { label: 'Gallery',              href: '#gallery', page: null },
   { label: 'Contact',              href: '#contact', page: null },
   { label: '🔍 Verify Certificate', href: '/?page=certificate-verification', page: 'certificate-verification' },
+  { label: '👤 Student Portal',     href: '/?page=student-portal',           page: 'student-portal' },
 ];
 
 function handleNavClick(e, link) {

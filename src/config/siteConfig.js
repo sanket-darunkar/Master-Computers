@@ -42,11 +42,11 @@ export const TAGLINE_SUB       = 'तुमच्या Digital भविष्�
 
 // ── Address ────────────────────────────────────────────────
 export const ADDRESS_LINE1     = 'Lok Kalyan Society, Anmol Nagar';
-export const ADDRESS_LINE2     = 'Wathoda Layout, Dighori, Nagpur';
+export const ADDRESS_LINE2     = 'Wathoda Layout, Nagpur';
 export const ADDRESS_STATE     = 'Maharashtra';
 export const ADDRESS_PINCODE   = '440034';
 export const ADDRESS_FULL      = `${ADDRESS_LINE1}, ${ADDRESS_LINE2}, ${ADDRESS_STATE} – ${ADDRESS_PINCODE}`;
-export const GOOGLE_MAPS_URL   = 'https://maps.google.com/?q=Master+Computer+Academy+Wathoda+Layout+Dighori+Nagpur+440034'; // [UPDATE with exact verified Maps link]
+export const GOOGLE_MAPS_URL   = 'https://maps.google.com/?q=Master+Computer+Academy+Wathoda+Layout+Nagpur+440034'; // [UPDATE with exact verified Maps link]
 export const GOOGLE_MAPS_EMBED = '';                               // [UPDATE: paste Google Maps embed src URL]
 
 // ── Business hours ─────────────────────────────────────────
@@ -438,15 +438,38 @@ export const COURSES = [
 // ── Reviews (add real reviews from verified students) ───────
 // DO NOT use fake testimonials. Add only verified reviews.
 export const REVIEWS = [
-  // Example structure — replace with real verified reviews from the academy owner:
-  // {
-  //   id: 1,
-  //   name: 'विद्यार्थी नाव',
-  //   course: 'MS-CIT',
-  //   rating: 5,
-  //   review: 'खूप चांगले शिकवतात. Practical learning आहे.',
-  //   avatar: '',
-  // },
+  {
+    id: 1,
+    name: 'Pranali Tejram Sonkusare',
+    course: 'MS-CIT',
+    rating: 5,
+    review: 'Master Computer Academy मध्ये MS-CIT शिकणे खूपच सोपे आणि आनंददायी वाटले. Sir खूप patience ने समजावून सांगतात. Practical classes मुळे confidence खूप वाढला. मी माझ्या सर्व मैत्रिणींना इथेच शिकण्याचा सल्ला देते!',
+    photo: '/images/reviews/pranali-sonkusare.jpeg',
+  },
+  {
+    id: 2,
+    name: 'Mayur Ramchandra Dhawale',
+    course: 'MS-CIT',
+    rating: 5,
+    review: 'खूप छान academy आहे. इथे शिकवण्याची पद्धत खूप practical आणि clear आहे. MS-CIT exam मध्ये मला खूप चांगले marks मिळाले. Academy च्या सर्व faculties चे खूप आभार!',
+    photo: '/images/reviews/mayur-dhawale.jpeg',
+  },
+  {
+    id: 3,
+    name: 'Snehal Ravindra Dhole',
+    course: 'MS-CIT',
+    rating: 5,
+    review: 'Master Computer Academy मध्ये शिकताना खूप मजा आली. प्रत्येक topic step-by-step शिकवला जातो. Doubt असेल तेव्हा Sir नेहमी मदत करतात. हे centre Wathoda मधील सर्वोत्तम computer classes आहे.',
+    photo: '/images/reviews/snehal-dhole.jpeg',
+  },
+  {
+    id: 4,
+    name: 'Mandar Gajbhiye',
+    course: 'MS-CIT',
+    rating: 5,
+    review: 'येथील शिक्षण पद्धत अत्यंत प्रभावी आहे. Computer चे basic ते advance सर्व काही शिकवले. MS-CIT certificate मिळाल्यावर नोकरीसाठी खूप उपयोग झाला. Master Computer Academy ला माझ्याकडून 5 stars!',
+    photo: '/images/reviews/mandar-gajbhiye.jpeg',
+  },
 ];
 
 // ── Gallery images ─────────────────────────────────────────

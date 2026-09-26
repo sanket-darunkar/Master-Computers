@@ -58,7 +58,7 @@ export default function FinalCta() {
 
         {/* Location reminder */}
         <p className="text-blue-300 text-sm font-devanagari mt-8">
-          📍 Lok Kalyan Society, Anmol Nagar, Wathoda Layout, Dighori, Nagpur – 440034
+          📍 Lok Kalyan Society, Anmol Nagar, Wathoda Layout, Nagpur – 440034
         </p>
       </div>
     </section>

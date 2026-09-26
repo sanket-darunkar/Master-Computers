@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const StarIcon = ({ filled }) => (
   <svg width="16" height="16" viewBox="0 0 20 20" fill={filled ? '#f59e0b' : '#e5e7eb'} aria-hidden="true">
@@ -17,22 +17,40 @@ function StarRating({ rating }) {
 }
 
 /**
- * ReviewCard — displays a student review
+ * ReviewCard — displays a student review with optional photo.
+ * If `review.photo` is provided, shows the student's actual photo.
+ * Falls back gracefully to the first-letter avatar on load error.
  */
 export default function ReviewCard({ review }) {
-  const { name, course, rating, review: text } = review;
+  const { name, course, rating, review: text, photo } = review;
+  const [imgError, setImgError] = useState(false);
+
+  const showPhoto = photo && !imgError;
 
   return (
     <div className="card p-6 flex flex-col gap-3">
       <StarRating rating={rating} />
-      <p className="text-gray-700 text-sm font-devanagari leading-relaxed italic">"{text}"</p>
+      <p className="text-gray-700 text-sm font-devanagari leading-relaxed italic flex-1">"{text}"</p>
       <div className="pt-2 border-t border-gray-100 flex items-center gap-3 mt-auto">
-        <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center
-                        text-primary-700 font-bold text-base flex-shrink-0">
-          {name.charAt(0)}
-        </div>
+        {showPhoto ? (
+          <img
+            src={photo}
+            alt={`Photo of ${name}`}
+            className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 border-primary-100"
+            loading="lazy"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <div
+            className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center
+                       text-primary-700 font-bold text-base flex-shrink-0"
+            aria-hidden="true"
+          >
+            {name.charAt(0)}
+          </div>
+        )}
         <div>
-          <p className="font-semibold text-sm text-gray-900 font-devanagari">{name}</p>
+          <p className="font-semibold text-sm text-gray-900">{name}</p>
           {course && <p className="text-xs text-primary-600">{course}</p>}
         </div>
       </div>

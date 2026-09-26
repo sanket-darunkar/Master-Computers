@@ -161,9 +161,15 @@ export default function AdminDashboard() {
                         <div className="admin-table-secondary admin-table-mono">{s.studentId}</div>
                       </td>
                       <td className="hidden sm:table-cell">
-                        <div className="text-slate-600 max-w-[160px] truncate" style={{ fontSize: 13 }}>{s.course || '—'}</div>
+                        <div className="text-slate-600 max-w-[160px] truncate" style={{ fontSize: 13 }}>
+                          {Array.isArray(s.courses) && s.courses.length > 0
+                            ? s.courses.length === 1
+                              ? s.courses[0]
+                              : `${s.courses[0]} +${s.courses.length - 1}`
+                            : s.course || '—'}
+                        </div>
                       </td>
-                      <td><StatusBadge status={s.status} /></td>
+                      <td><StatusBadge status={s.examForm} /></td>
                     </tr>
                   ))}
                 </tbody>

@@ -6,8 +6,8 @@ import { adminNavigate } from '../AdminApp';
 import { COURSES }       from '../../config/siteConfig';
 
 const PAGE_SIZE = 15;
-const STATUSES  = ['', 'ACTIVE', 'INACTIVE', 'COMPLETED', 'DROPPED'];
-const S_LABELS  = { '': 'All Status', ACTIVE: 'Active', INACTIVE: 'Inactive', COMPLETED: 'Completed', DROPPED: 'Dropped' };
+const EXAM_FORM_OPTIONS = ['', 'Exam Form Submitted', 'Exam Form Pending'];
+const EF_LABELS = { '': 'All Exam Form', 'Exam Form Submitted': 'Submitted', 'Exam Form Pending': 'Pending' };
 const COURSE_OPTIONS = [{ value: '', label: 'All Courses' }, ...COURSES.map(c => ({ value: c.name, label: c.name }))];
 
 function fmtDate(iso) {
@@ -88,7 +88,7 @@ export default function AdminStudentList() {
           <button type="submit" className="admin-btn-secondary">Search</button>
         </form>
         <select value={status} onChange={e => { setStatus(e.target.value); setPage(0); }} className="admin-select">
-          {STATUSES.map(s => <option key={s} value={s}>{S_LABELS[s]}</option>)}
+          {EXAM_FORM_OPTIONS.map(s => <option key={s} value={s}>{EF_LABELS[s]}</option>)}
         </select>
         <select value={course} onChange={e => { setCourse(e.target.value); setPage(0); }} className="admin-select" style={{ maxWidth: 180 }}>
           {COURSE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -100,7 +100,7 @@ export default function AdminStudentList() {
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <span className="text-slate-400 font-medium" style={{ fontSize: 12.5 }}>Filters:</span>
           {search && <span className="admin-filter-chip">"{search}" <button onClick={() => { setSearch(''); setSearchInput(''); setPage(0); }}>×</button></span>}
-          {status && <span className="admin-filter-chip">{S_LABELS[status]} <button onClick={() => { setStatus(''); setPage(0); }}>×</button></span>}
+          {status && <span className="admin-filter-chip">{EF_LABELS[status]} <button onClick={() => { setStatus(''); setPage(0); }}>×</button></span>}
           {course && <span className="admin-filter-chip">{course} <button onClick={() => { setCourse(''); setPage(0); }}>×</button></span>}
           <button onClick={clearFilters} className="text-slate-400 hover:text-red-500 font-medium transition-colors" style={{ fontSize: 12.5 }}>Clear all</button>
         </div>
@@ -141,7 +141,7 @@ export default function AdminStudentList() {
                   <th className="hidden sm:table-cell">Mobile</th>
                   <th className="hidden md:table-cell">Course</th>
                   <th className="hidden lg:table-cell">Admission</th>
-                  <th>Status</th>
+                  <th>Exam Form</th>
                   <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
@@ -161,10 +161,16 @@ export default function AdminStudentList() {
                       </td>
                       <td className="hidden sm:table-cell" style={{ color: '#64748b', fontSize: 13 }}>{s.ownMobile || '—'}</td>
                       <td className="hidden md:table-cell">
-                        <div className="max-w-[160px] truncate" style={{ color: '#64748b', fontSize: 13 }}>{s.course || '—'}</div>
+                        <div className="max-w-[160px] truncate" style={{ color: '#64748b', fontSize: 13 }}>
+                          {Array.isArray(s.courses) && s.courses.length > 0
+                            ? s.courses.length === 1
+                              ? s.courses[0]
+                              : `${s.courses[0]} +${s.courses.length - 1}`
+                            : s.course || '—'}
+                        </div>
                       </td>
                       <td className="hidden lg:table-cell" style={{ color: '#94a3b8', fontSize: 13 }}>{fmtDate(s.admissionDate)}</td>
-                      <td><StatusBadge status={s.status} /></td>
+                      <td><StatusBadge status={s.examForm} /></td>
                       <td style={{ textAlign: 'right' }}>
                         <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
                           <button onClick={() => adminNavigate(`/admin/students/${s.id}`)} className="admin-row-action-view">View</button>

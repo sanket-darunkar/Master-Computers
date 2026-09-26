@@ -21,6 +21,7 @@ import FinalCta               from './components/sections/FinalCta';
 
 // Pages
 import CertificateVerification from './pages/CertificateVerification';
+import StudentPortal           from './pages/StudentPortal';
 
 // Admin section (lazy-loaded so it doesn't bloat the public bundle)
 import AdminApp               from './admin/AdminApp';
@@ -96,7 +97,8 @@ function PublicApp() {
     return () => { delete window.__mcaNavigate; };
   }, []);
 
-  const isCertPage = page === 'certificate-verification';
+  const isCertPage    = page === 'certificate-verification';
+  const isPortalPage  = page === 'student-portal';
 
   return (
     <>
@@ -114,6 +116,8 @@ function PublicApp() {
       <main id="main-content">
         {isCertPage ? (
           <CertificateVerification />
+        ) : isPortalPage ? (
+          <StudentPortal />
         ) : (
           <>
             <Hero />
@@ -133,7 +137,7 @@ function PublicApp() {
       </main>
 
       <Footer currentPage={page} />
-      {!isCertPage && <MobileBottomBar />}
+      {!isCertPage && !isPortalPage && <MobileBottomBar />}
     </>
   );
 }

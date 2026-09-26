@@ -41,17 +41,27 @@ const CertIcon = () => (
   </svg>
 );
 
+const PortalIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+    <circle cx="12" cy="7" r="4"/>
+  </svg>
+);
+
 export default function Navbar({ currentPage = 'home' }) {
   const [menuOpen, setMenuOpen]    = useState(false);
   const [scrolled, setScrolled]    = useState(false);
   const [activeSection, setActive] = useState('home');
 
-  const isCertPage = currentPage === 'certificate-verification';
+  const isCertPage   = currentPage === 'certificate-verification';
+  const isPortalPage = currentPage === 'student-portal';
+  const isSpecialPage = isCertPage || isPortalPage;
   const closeMenu  = useCallback(() => setMenuOpen(false), []);
 
   // ── Scroll / active section tracking (home page only) ───────
   useEffect(() => {
-    if (isCertPage) return;
+    if (isSpecialPage) return;
     const onScroll = () => {
       setScrolled(window.scrollY > 20);
       const sections = NAV_LINKS.map(l => l.href.replace('#', ''));
@@ -65,15 +75,15 @@ export default function Navbar({ currentPage = 'home' }) {
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, [isCertPage]);
+  }, [isSpecialPage]);
 
-  // Scroll shadow also applies on cert page
+  // Scroll shadow also applies on special pages
   useEffect(() => {
-    if (!isCertPage) return;
+    if (!isSpecialPage) return;
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, [isCertPage]);
+  }, [isSpecialPage]);
 
   // Close menu on desktop resize
   useEffect(() => {
@@ -92,8 +102,7 @@ export default function Navbar({ currentPage = 'home' }) {
   const handleSectionClick = (e, href) => {
     e.preventDefault();
     closeMenu();
-    if (isCertPage) {
-      // Navigate back to home first, then let hash scroll happen
+    if (isSpecialPage) {
       window.__mcaNavigate?.('home');
       setTimeout(() => {
         const el = document.querySelector(href);
@@ -115,6 +124,12 @@ export default function Navbar({ currentPage = 'home' }) {
     e.preventDefault();
     closeMenu();
     window.__mcaNavigate?.('certificate-verification');
+  };
+
+  const goPortalPage = (e) => {
+    e.preventDefault();
+    closeMenu();
+    window.__mcaNavigate?.('student-portal');
   };
 
   return (
@@ -150,15 +165,15 @@ export default function Navbar({ currentPage = 'home' }) {
               {NAV_LINKS.map(link => (
                 <a
                   key={link.href}
-                  href={isCertPage ? '/' : link.href}
+                  href={isSpecialPage ? '/' : link.href}
                   onClick={e => handleSectionClick(e, link.href)}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150
                               focus-visible:ring-2 focus-visible:ring-primary-600
-                    ${!isCertPage && activeSection === link.href.replace('#', '')
+                    ${!isSpecialPage && activeSection === link.href.replace('#', '')
                       ? 'text-primary-700 bg-primary-50'
                       : 'text-gray-600 hover:text-primary-700 hover:bg-primary-50'
                     }`}
-                  aria-current={!isCertPage && activeSection === link.href.replace('#', '') ? 'page' : undefined}
+                  aria-current={!isSpecialPage && activeSection === link.href.replace('#', '') ? 'page' : undefined}
                 >
                   {link.label}
                 </a>
@@ -178,6 +193,22 @@ export default function Navbar({ currentPage = 'home' }) {
               >
                 <CertIcon />
                 Verify Certificate
+              </a>
+
+              {/* Student Portal link */}
+              <a
+                href="/?page=student-portal"
+                onClick={goPortalPage}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150
+                            focus-visible:ring-2 focus-visible:ring-primary-600 flex items-center gap-1.5
+                  ${isPortalPage
+                    ? 'text-primary-700 bg-primary-50'
+                    : 'text-gray-600 hover:text-primary-700 hover:bg-primary-50'
+                  }`}
+                aria-current={isPortalPage ? 'page' : undefined}
+              >
+                <PortalIcon />
+                Student Portal
               </a>
             </nav>
 
@@ -258,11 +289,11 @@ export default function Navbar({ currentPage = 'home' }) {
             {NAV_LINKS.map((link, i) => (
               <a
                 key={link.href}
-                href={isCertPage ? '/' : link.href}
+                href={isSpecialPage ? '/' : link.href}
                 onClick={e => handleSectionClick(e, link.href)}
                 className={`flex items-center px-4 py-3 rounded-xl text-base font-medium
                   transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-primary-600 mb-1
-                  ${!isCertPage && activeSection === link.href.replace('#', '')
+                  ${!isSpecialPage && activeSection === link.href.replace('#', '')
                     ? 'bg-primary-50 text-primary-700'
                     : 'text-gray-700 hover:bg-gray-50'
                   }`}
@@ -282,6 +313,18 @@ export default function Navbar({ currentPage = 'home' }) {
             >
               <CertIcon />
               Verify Certificate
+            </a>
+
+            {/* Student Portal in mobile menu */}
+            <a
+              href="/?page=student-portal"
+              onClick={goPortalPage}
+              className={`flex items-center gap-2 px-4 py-3 rounded-xl text-base font-medium
+                transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-primary-600 mb-1
+                ${isPortalPage ? 'bg-primary-50 text-primary-700' : 'text-gray-700 hover:bg-gray-50'}`}
+            >
+              <PortalIcon />
+              Student Portal
             </a>
           </nav>
 

@@ -23,7 +23,7 @@ const MARITAL   = ['Single', 'Married', 'Divorced', 'Widowed'];
 const CATS      = ['General', 'OBC', 'SC', 'ST', 'NT', 'SBC', 'EWS', 'Other'];
 const QUALS     = ['Below SSC', 'SSC (10th)', 'HSC (12th)', 'ITI', 'Diploma', 'Graduate', 'Post Graduate', 'Other'];
 const BATCHES   = ['Morning 7–9', 'Morning 9–11', 'Afternoon 12–2', 'Afternoon 2–4', 'Evening 4–6', 'Evening 6–8', 'Flexible'];
-const STATUSES  = ['ACTIVE', 'INACTIVE', 'COMPLETED', 'DROPPED'];
+const EXAM_FORM_STATUSES = ['Exam Form Submitted', 'Exam Form Pending'];
 
 const EMPTY = {
   studentId: '', firstName: '', middleName: '', surname: '',
@@ -32,9 +32,10 @@ const EMPTY = {
   ownMobile: '', otherMobile: '',
   houseNo: '', street: '', city: '', tahsil: '', district: '', pinCode: '',
   qualification: '', category: '',
-  course: '', admissionDate: '', courseDuration: '', batchTime: '',
+  courses: [], course: '',   // courses[] = multi-select; course = first entry (backward compat)
+  admissionDate: '', courseDuration: '', batchTime: '',
   totalFees: '', feesPaid: '', receiptNumber: '', receiptDate: '',
-  status: 'ACTIVE', notes: '',
+  examForm: 'Exam Form Pending', notes: '',
 };
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -56,6 +57,51 @@ function SectionTitle({ children }) {
   return (
     <div className="col-span-full border-b border-primary-100 pb-2 mb-1">
       <h3 className="text-xs font-extrabold text-primary-700 uppercase tracking-widest">{children}</h3>
+    </div>
+  );
+}
+
+/**
+ * CourseCheckList — multi-select checklist for courses.
+ * Renders a scrollable list of checkboxes, one per course option.
+ */
+function CourseCheckList({ options, selected, onChange, error }) {
+  const toggle = (courseName) => {
+    const next = selected.includes(courseName)
+      ? selected.filter(c => c !== courseName)
+      : [...selected, courseName];
+    onChange(next);
+  };
+
+  return (
+    <div>
+      <div className={`max-h-48 overflow-y-auto rounded-xl border bg-gray-50 divide-y divide-gray-100
+        ${error ? 'border-red-300' : 'border-gray-200'}`}>
+        {options.map(course => {
+          const checked = selected.includes(course);
+          return (
+            <label
+              key={course}
+              className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-primary-50
+                          transition-colors duration-100 select-none text-sm
+                          ${checked ? 'bg-primary-50 text-primary-800 font-semibold' : 'text-gray-700'}`}
+            >
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={() => toggle(course)}
+                className="w-4 h-4 rounded accent-primary-600 flex-shrink-0"
+              />
+              {course}
+            </label>
+          );
+        })}
+      </div>
+      {selected.length > 0 && (
+        <p className="text-xs text-primary-600 mt-1 font-semibold">
+          {selected.length} course{selected.length > 1 ? 's' : ''} selected
+        </p>
+      )}
     </div>
   );
 }
@@ -87,7 +133,16 @@ export default function StudentForm({
   onSubmit, submitting = false,
   submitLabel = 'Save', serverError = '', onCancel,
 }) {
-  const [v, setV]         = useState({ ...EMPTY, ...initialValues });
+  // Normalise initialValues so courses is always an array
+  const normalised = initialValues ? {
+    ...initialValues,
+    courses: Array.isArray(initialValues.courses) && initialValues.courses.length > 0
+      ? initialValues.courses
+      : initialValues.course
+      ? [initialValues.course]
+      : [],
+  } : {};
+  const [v, setV]         = useState({ ...EMPTY, ...normalised });
   const [errs, setErrs]   = useState({});
   const [photo, setPhoto] = useState(null);          // File object
   const [preview, setPrev] = useState(initialValues?.studentPhotoUrl || '');
@@ -122,7 +177,7 @@ export default function StudentForm({
     if (!v.ownMobile.trim())             e.ownMobile  = 'Mobile number is required.';
     if (v.ownMobile.trim() && !/^\d{10}$/.test(v.ownMobile.trim()))
                                          e.ownMobile  = 'Enter a valid 10-digit mobile number.';
-    if (!v.course)                       e.course     = 'Please select a course.';
+    if (!v.courses || v.courses.length === 0) e.courses = 'Please select at least one course.';
     if (!v.admissionDate)                e.admissionDate = 'Admission date is required.';
     if (v.aadhaarNumber && !/^\d{12}$/.test(v.aadhaarNumber.replace(/\s/g, '')))
                                          e.aadhaarNumber = 'Aadhaar must be 12 digits.';
@@ -138,6 +193,8 @@ export default function StudentForm({
 
     const payload = { ...v };
     if (!isEdit) payload.studentId = v.studentId.trim();
+    // Set backward-compat single course field to first selected course
+    payload.course = Array.isArray(v.courses) && v.courses.length > 0 ? v.courses[0] : '';
     // Computed/display-only — don't send to backend
     delete payload.balanceAmount;
 
@@ -293,11 +350,13 @@ export default function StudentForm({
       {/* ── ADMISSION ──────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 mb-6">
         <SectionTitle>Admission Details</SectionTitle>
-        <Field label="Course" required error={errs.course}>
-          <select value={v.course} onChange={e => set('course', e.target.value)} className={sel(errs.course)}>
-            <option value="">Select course</option>
-            {COURSE_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+        <Field label="Course(s)" required error={errs.courses} hint="Select one or more courses" className="sm:col-span-2">
+          <CourseCheckList
+            options={COURSE_OPTIONS}
+            selected={v.courses}
+            onChange={val => set('courses', val)}
+            error={errs.courses}
+          />
         </Field>
         <Field label="Admission Date" required error={errs.admissionDate}>
           <input type="date" value={v.admissionDate} onChange={e => set('admissionDate', e.target.value)} className={inp(errs.admissionDate)} />
@@ -312,9 +371,9 @@ export default function StudentForm({
           </select>
         </Field>
         {isEdit && (
-          <Field label="Status" error={errs.status}>
-            <select value={v.status} onChange={e => set('status', e.target.value)} className={sel(errs.status)}>
-              {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+          <Field label="Exam Form" error={errs.examForm}>
+            <select value={v.examForm} onChange={e => set('examForm', e.target.value)} className={sel(errs.examForm)}>
+              {EXAM_FORM_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </Field>
         )}

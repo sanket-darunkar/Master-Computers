@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import {
   ACADEMY_NAME, TAGLINE_MARATHI, TAGLINE_SUB,
-  ADDRESS_LINE2, waLink, WA_MSG_ADMISSION, callLink,
+  waLink, WA_MSG_ADMISSION, callLink,
 } from '../../config/siteConfig';
 
 const LocationPinIcon = () => (
@@ -147,10 +147,9 @@ export default function Hero() {
               </p>
             </div>
 
-            {/* Location chip */}
             <div className="flex items-center gap-1.5 text-blue-200 text-sm font-medium">
               <LocationPinIcon />
-              <span>Wathoda, {ADDRESS_LINE2.split(',')[1]?.trim() || 'Nagpur'}</span>
+              <span>Wathoda, Nagpur</span>
             </div>
 
             {/* CTA buttons */}

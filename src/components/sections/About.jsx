@@ -16,13 +16,13 @@ const HIGHLIGHTS = [
     icon: '📍',
     title: 'Location',
     titleMarathi: 'स्थान',
-    desc: `${ADDRESS_LINE1}, ${ADDRESS_LINE2} — Wathoda Police Station जवळ, Dighori आणि आसपासच्या भागातून सहज येता येते.`,
+    desc: `${ADDRESS_LINE1}, ${ADDRESS_LINE2} — Wathoda Police Station जवळ, आसपासच्या भागातून सहज येता येते.`,
   },
   {
     icon: '🌍',
     title: 'Community',
     titleMarathi: 'आमचा समाज',
-    desc: 'Wathoda, Dighori आणि Nagpur च्या विद्यार्थ्यांसाठी — Marathi-friendly, beginner-friendly learning environment.',
+    desc: 'Wathoda, Nagpur च्या विद्यार्थ्यांसाठी — Marathi-friendly, beginner-friendly learning environment.',
   },
 ];
 
@@ -50,8 +50,8 @@ export default function About() {
               मध्ये आहे. आम्ही Marathi मध्ये शिकवतो — जेणेकरून प्रत्येक विद्यार्थ्याला सहज समजेल.
             </p>
             <p className="text-gray-700 font-devanagari leading-relaxed">
-              <strong>Wathoda Police Station जवळ</strong> असल्यामुळे Wathoda, Wathoda Layout,
-              Dighori आणि आसपासच्या भागातून येणे सोयीचे आहे.
+              <strong>Wathoda Police Station जवळ</strong> असल्यामुळे Wathoda, Wathoda Layout
+              आणि आसपासच्या भागातून येणे सोयीचे आहे.
             </p>
           </div>
 
@@ -94,7 +94,7 @@ export default function About() {
               📍 Wathoda आणि आसपासच्या विद्यार्थ्यांसाठी
             </p>
             <p className="text-gray-700 font-devanagari text-sm leading-relaxed">
-              Wathoda, Wathoda Layout, Dighori आणि Nagpur मधील विद्यार्थ्यांसाठी
+              Wathoda, Wathoda Layout आणि Nagpur मधील विद्यार्थ्यांसाठी
               MS-CIT आणि Computer Classes उपलब्ध आहेत.
             </p>
           </div>

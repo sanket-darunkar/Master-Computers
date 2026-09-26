@@ -109,7 +109,9 @@ function FormPage({ student: s, isExam }) {
       <div style={{ background: '#1565c0', color: '#fff', fontWeight: 700, fontSize: '8pt',
         padding: '3px 6px', marginBottom: 3 }}>
         Sir, I Request You To Admit Me To Course :-&nbsp;&nbsp;
-        <span style={{ borderBottom: '1px solid #fff', display: 'inline-block', minWidth: 200 }}>{v(s.course)}</span>
+        <span style={{ borderBottom: '1px solid #fff', display: 'inline-block', minWidth: 200 }}>
+          {Array.isArray(s.courses) && s.courses.length > 0 ? s.courses.join(', ') : v(s.course)}
+        </span>
       </div>
 
       {/* ── PERSONAL DETAILS + PHOTO ───────────────────────── */}
