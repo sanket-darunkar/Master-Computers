@@ -197,6 +197,11 @@ export default function StudentForm({
     payload.course = Array.isArray(v.courses) && v.courses.length > 0 ? v.courses[0] : '';
     // Computed/display-only — don't send to backend
     delete payload.balanceAmount;
+    // Per-course exam status is managed via PATCH /{id}/status (AdminStudentDetail),
+    // not the edit form PUT. Remove these so saving student details never
+    // accidentally overwrites individual course statuses.
+    delete payload.examForm;
+    delete payload.courseExamStatuses;
 
     // Normalize empty strings to null for optional fields
     Object.keys(payload).forEach(k => {
@@ -370,13 +375,6 @@ export default function StudentForm({
             {BATCHES.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
         </Field>
-        {isEdit && (
-          <Field label="Exam Form" error={errs.examForm}>
-            <select value={v.examForm} onChange={e => set('examForm', e.target.value)} className={sel(errs.examForm)}>
-              {EXAM_FORM_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </Field>
-        )}
       </div>
 
       {/* ── FEES ───────────────────────────────────────────── */}
