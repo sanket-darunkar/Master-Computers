@@ -732,6 +732,23 @@
 
 .admin-row-action-edit:hover { background: #e2e8f0; color: #1e293b; }
 
+.admin-row-action-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all var(--adm-transition);
+  padding: 5px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  border: none;
+  background: #fff1f2;
+  color: #be123c;
+}
+
+.admin-row-action-delete:hover { background: #fecdd3; color: #9f1239; }
+
 /* ── Status badge ────────────────────────────────────────────── */
 .admin-badge {
   display: inline-flex;
@@ -1185,3 +1202,283 @@
 
 
 
+
+/* ═══════════════════════════════════════════════════════════════
+   ADMIN DARK MODE
+   Applied via .admin-dark class on <body> (set by AdminThemeContext).
+   Overrides all admin CSS custom properties and surfaces.
+   Does NOT affect the public website.
+═══════════════════════════════════════════════════════════════ */
+
+.admin-dark {
+  /* ── Token overrides ── */
+  --adm-sidebar-bg    : #0a0f1e;
+  --adm-sidebar-border: rgba(255,255,255,0.06);
+  --adm-content-bg    : #0f1623;
+  --adm-blue          : #3b82f6;
+  --adm-shadow-sm     : 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+  --adm-shadow-md     : 0 4px 12px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* ── Shell / background ── */
+.admin-dark .admin-shell   { background: #0f1623; }
+.admin-dark .admin-content { background: #0f1623; }
+
+/* ── Header ── */
+.admin-dark .admin-header {
+  background: #161f2e;
+  border-bottom-color: #1e2d42;
+  box-shadow: 0 1px 0 #1e2d42;
+}
+
+/* ── Cards ── */
+.admin-dark .admin-card,
+.admin-dark .admin-table-wrap,
+.admin-dark .admin-stat-card {
+  background: #161f2e;
+  border-color: #1e2d42;
+}
+
+.admin-dark .admin-card-header  { border-bottom-color: #1e2d42; }
+.admin-dark .admin-card-title   { color: #e2e8f0; }
+.admin-dark .admin-stat-value   { color: #f1f5f9; }
+.admin-dark .admin-stat-label   { color: #94a3b8; }
+.admin-dark .admin-stat-sub     { color: #64748b; }
+
+/* ── Tables ── */
+.admin-dark .admin-table thead tr  { background: #1a2538; border-bottom-color: #243448; }
+.admin-dark .admin-table th        { color: #64748b; }
+.admin-dark .admin-table tbody tr  { border-bottom-color: #1e2d42; }
+.admin-dark .admin-table tbody tr:hover { background: #1a2538; }
+.admin-dark .admin-table td        { color: #cbd5e1; }
+.admin-dark .admin-table-name      { color: #e2e8f0; }
+.admin-dark .admin-table-secondary { color: #64748b; }
+.admin-dark .admin-table-mono      { color: #94a3b8; }
+
+/* ── Avatar ── */
+.admin-dark .admin-avatar          { background: #1e2d42; }
+.admin-dark .admin-avatar-initials { color: #94a3b8; }
+
+/* ── Pagination ── */
+.admin-dark .admin-pagination      { border-top-color: #1e2d42; }
+.admin-dark .admin-pagination-info { color: #64748b; }
+.admin-dark .admin-pagination-btn  {
+  background: #161f2e;
+  border-color: #1e2d42;
+  color: #94a3b8;
+}
+.admin-dark .admin-pagination-btn:hover:not(:disabled) {
+  background: #1a2538;
+  border-color: #243448;
+}
+.admin-dark .admin-pagination-page { color: #94a3b8; }
+
+/* ── Toolbar / search ── */
+.admin-dark .admin-toolbar         { }
+.admin-dark .admin-search-input {
+  background: #161f2e;
+  border-color: #1e2d42;
+  color: #e2e8f0;
+}
+.admin-dark .admin-search-input::placeholder { color: #475569; }
+.admin-dark .admin-search-input:focus {
+  border-color: var(--adm-blue);
+  background: #1a2538;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+}
+.admin-dark .admin-search-icon { color: #475569; }
+
+.admin-dark .admin-select {
+  background: #161f2e;
+  border-color: #1e2d42;
+  color: #94a3b8;
+}
+.admin-dark .admin-select:focus {
+  border-color: var(--adm-blue);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+}
+
+/* ── Buttons ── */
+.admin-dark .admin-btn-secondary {
+  background: #1a2538;
+  border-color: #243448;
+  color: #94a3b8;
+}
+.admin-dark .admin-btn-secondary:hover:not(:disabled) {
+  background: #1e2d42;
+  border-color: #2d3f5c;
+  color: #e2e8f0;
+}
+.admin-dark .admin-btn-ghost { color: #64748b; }
+.admin-dark .admin-btn-ghost:hover:not(:disabled) {
+  background: #1a2538;
+  color: #e2e8f0;
+}
+.admin-dark .admin-btn-icon { color: #64748b; }
+.admin-dark .admin-btn-icon:hover { background: #1a2538; color: #e2e8f0; }
+
+/* Row action buttons */
+.admin-dark .admin-row-action-view   { background: #172554; color: #93c5fd; }
+.admin-dark .admin-row-action-view:hover { background: #1e3a8a; }
+.admin-dark .admin-row-action-edit   { background: #1e2d42; color: #94a3b8; }
+.admin-dark .admin-row-action-edit:hover { background: #243448; color: #e2e8f0; }
+.admin-dark .admin-row-action-delete { background: #2d0f14; color: #fca5a5; }
+.admin-dark .admin-row-action-delete:hover { background: #3f1219; }
+
+/* ── Forms ── */
+.admin-dark .admin-input {
+  background: #1a2538;
+  border-color: #243448;
+  color: #e2e8f0;
+}
+.admin-dark .admin-input::placeholder { color: #475569; }
+.admin-dark .admin-input:focus {
+  background: #1e2d42;
+  border-color: var(--adm-blue);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+}
+.admin-dark .admin-input--readonly { background: #0f1623; color: #64748b; }
+
+.admin-dark .admin-field-label { color: #64748b; }
+
+.admin-dark .admin-form-section-title {
+  color: #64748b;
+  border-bottom-color: #1e2d42;
+}
+
+/* ── Empty / loading / error states ── */
+.admin-dark .admin-empty-icon  { background: #1a2538; color: #475569; }
+.admin-dark .admin-empty-title { color: #94a3b8; }
+.admin-dark .admin-empty-sub   { color: #475569; }
+
+.admin-dark .admin-loading     { color: #475569; }
+.admin-dark .admin-spinner     { color: #475569; }
+
+.admin-dark .admin-error {
+  background: #2d0f14;
+  border-color: #7f1d1d;
+  color: #fca5a5;
+}
+
+/* ── Breadcrumb ── */
+.admin-dark .admin-breadcrumb        { color: #475569; }
+.admin-dark .admin-breadcrumb-link   { color: #64748b; }
+.admin-dark .admin-breadcrumb-link:hover { color: var(--adm-blue); }
+.admin-dark .admin-breadcrumb-sep    { color: #2d3f5c; }
+.admin-dark .admin-breadcrumb-current { color: #cbd5e1; }
+
+/* ── Detail rows ── */
+.admin-dark .admin-detail-row   { border-bottom-color: #1e2d42; }
+.admin-dark .admin-detail-label { color: #475569; }
+.admin-dark .admin-detail-value { color: #e2e8f0; }
+
+/* ── Profile card header ── */
+.admin-dark .admin-profile-header {
+  background: linear-gradient(135deg, #161f2e 0%, #1a2538 100%);
+  border-bottom-color: #1e2d42;
+}
+.admin-dark .admin-profile-name  { color: #f1f5f9; }
+.admin-dark .admin-profile-sub   { color: #60a5fa; }
+.admin-dark .admin-profile-id    { color: #475569; }
+.admin-dark .admin-profile-photo { border-color: #243448; }
+.admin-dark .admin-profile-photo-placeholder {
+  background: linear-gradient(135deg, #1e2d42, #243448);
+  color: #475569;
+}
+
+/* ── Status dropdown ── */
+.admin-dark .admin-status-menu-panel {
+  background: #161f2e;
+  border-color: #1e2d42;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.admin-dark .admin-status-menu-item { color: #94a3b8; }
+.admin-dark .admin-status-menu-item:hover { background: #1a2538; }
+
+/* ── Filter chips ── */
+.admin-dark .admin-filter-chip {
+  background: #172554;
+  color: #93c5fd;
+  border-color: #1e3a8a;
+}
+
+/* ── Page header text ── */
+.admin-dark .admin-page-header-left p { color: #475569; }
+
+/* ── Header buttons ── */
+.admin-dark .admin-header button {
+  border-color: #1e2d42;
+  color: #64748b;
+}
+.admin-dark .admin-header button:hover {
+  background: #1a2538;
+  color: #94a3b8;
+}
+
+/* ── Login page in dark mode ── */
+.admin-dark .admin-login-card { background: #161f2e; }
+.admin-dark .admin-login-form input {
+  background: #1a2538;
+  border-color: #243448;
+  color: #e2e8f0;
+}
+
+/* ── Confirm Dialog in dark mode ── */
+.admin-dark [role="dialog"] > div:last-child {
+  background: #161f2e;
+  border: 1px solid #1e2d42;
+}
+.admin-dark [role="dialog"] h3 { color: #f1f5f9; }
+.admin-dark [role="dialog"] p  { color: #94a3b8; }
+.admin-dark [role="dialog"] button:first-of-type {
+  background: #1a2538;
+  border-color: #243448;
+  color: #94a3b8;
+}
+.admin-dark [role="dialog"] button:first-of-type:hover {
+  background: #1e2d42;
+}
+
+/* ── Toast stays dark regardless (already dark bg) ── */
+
+/* ── Public site forms/cards used in admin pages ── */
+.admin-dark .admin-card .bg-red-50    { background: #2d0f14 !important; }
+.admin-dark .admin-card .border-red-200 { border-color: #7f1d1d !important; }
+.admin-dark .admin-card .text-red-700 { color: #fca5a5 !important; }
+
+/* ── StudentForm / CertForm inside admin-dark ── */
+.admin-dark form .bg-gray-50,
+.admin-dark form input,
+.admin-dark form select,
+.admin-dark form textarea {
+  background: #1a2538 !important;
+  border-color: #243448 !important;
+  color: #e2e8f0 !important;
+}
+.admin-dark form input::placeholder,
+.admin-dark form select::placeholder,
+.admin-dark form textarea::placeholder { color: #475569 !important; }
+.admin-dark form input:focus,
+.admin-dark form select:focus,
+.admin-dark form textarea:focus {
+  background: #1e2d42 !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.15) !important;
+}
+.admin-dark form input[readonly],
+.admin-dark form input[aria-readonly="true"] {
+  background: #0f1623 !important;
+  color: #475569 !important;
+  cursor: not-allowed;
+}
+.admin-dark form label.block { color: #64748b !important; }
+.admin-dark form .border-b { border-bottom-color: #1e2d42 !important; }
+.admin-dark form .text-primary-700 { color: #60a5fa !important; }
+.admin-dark form .border-gray-200 { border-color: #243448 !important; }
+.admin-dark form .bg-primary-50 { background: #172554 !important; }
+.admin-dark form .divide-gray-100 > * { border-color: #1e2d42 !important; }
+.admin-dark form .hover\:bg-primary-50:hover { background: #1e3a8a !important; }
+
+/* ── SectionTitle in StudentForm ── */
+.admin-dark .col-span-full.border-b { border-bottom-color: #1e2d42 !important; }
+.admin-dark .text-primary-700 { color: #60a5fa; }

@@ -22,6 +22,7 @@
 import React, { useEffect, useState } from 'react';
 import { AdminAuthProvider, useAdminAuth } from './AdminAuthContext';
 import { ToastProvider }                   from './components/Toast';
+import { AdminThemeProvider }              from './AdminThemeContext';
 
 import AdminLogin          from './pages/AdminLogin';
 import AdminDashboard      from './pages/AdminDashboard';
@@ -79,11 +80,13 @@ export function adminNavigate(path) {
 // ── Root ──────────────────────────────────────────────────────
 export default function AdminApp() {
   return (
-    <AdminAuthProvider>
-      <ToastProvider>
-        <AdminRouter />
-      </ToastProvider>
-    </AdminAuthProvider>
+    <AdminThemeProvider>
+      <AdminAuthProvider>
+        <ToastProvider>
+          <AdminRouter />
+        </ToastProvider>
+      </AdminAuthProvider>
+    </AdminThemeProvider>
   );
 }
 

@@ -95,6 +95,9 @@ async function adminFetch(path, options = {}) {
     throw new AdminApiError(401, 'Session expired. Please log in again.');
   }
 
+  // 204 No Content — successful operation with no response body (e.g. DELETE)
+  if (response.status === 204) return null;
+
   let body;
   try {
     body = await response.json();
@@ -358,4 +361,22 @@ export async function updateStudentStatus(id, examForm, courseName = null) {
     body  : JSON.stringify(body),
   });
   return res.data;
+}
+
+/**
+ * DELETE /api/admin/students/{id}
+ * Permanently removes the student record from the database.
+ * Returns nothing on 204 No Content; throws AdminApiError on failure.
+ */
+export async function deleteStudent(id) {
+  await adminFetch(`/api/admin/students/${id}`, { method: 'DELETE' });
+}
+
+/**
+ * DELETE /api/admin/certificates/{id}
+ * Permanently removes the certificate record from the database.
+ * Returns nothing on 204 No Content; throws AdminApiError on failure.
+ */
+export async function deleteCertificate(id) {
+  await adminFetch(`/api/admin/certificates/${id}`, { method: 'DELETE' });
 }

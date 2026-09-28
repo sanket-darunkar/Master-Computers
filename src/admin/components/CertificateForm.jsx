@@ -22,10 +22,19 @@
  */
 
 import React, { useState, useRef, useCallback } from 'react';
+import { COURSES } from '../../config/siteConfig';
 
 const ACCEPTED_MIME    = ['image/jpeg', 'image/png'];
 const ACCEPTED_ACCEPT  = '.jpg,.jpeg,.png';
 const MAX_BYTES        = 2 * 1024 * 1024; // 2 MB
+
+const INSTITUTION_NAME = 'MASTER COMPUTER ACADEMY';
+
+// Course options: all COURSES from siteConfig + a custom/other entry
+const CERT_COURSE_OPTIONS = [
+  ...COURSES.map(c => c.name),
+  'Other',
+];
 
 const EMPTY = {
   certificateNumber : '',
@@ -33,7 +42,7 @@ const EMPTY = {
   courseName        : '',
   issueDate         : '',
   duration          : '',
-  institutionName   : '',
+  institutionName   : INSTITUTION_NAME,   // auto-filled; always MCA
   marks             : '',
   grade             : '',
 };
@@ -112,7 +121,12 @@ export default function CertificateForm({
   serverError  = '',
   onCancel,
 }) {
-  const [values, setValues] = useState({ ...EMPTY, ...initialValues });
+  const [values, setValues] = useState(() => ({
+    ...EMPTY,
+    ...initialValues,
+    // Always ensure institution name is set; preserve existing value when editing
+    institutionName: initialValues?.institutionName || INSTITUTION_NAME,
+  }));
   const [errors, setErrors] = useState({});
 
   // Photo state
@@ -212,12 +226,13 @@ export default function CertificateForm({
       courseName      : values.courseName.trim(),
       issueDate       : values.issueDate,
       removePhoto,
+      // Institution name is always MASTER COMPUTER ACADEMY — always include it
+      institutionName : (values.institutionName.trim() || INSTITUTION_NAME),
     };
     if (!isEdit) payload.certificateNumber = values.certificateNumber.trim();
-    if (values.duration.trim())        payload.duration        = values.duration.trim();
-    if (values.institutionName.trim()) payload.institutionName = values.institutionName.trim();
-    if (values.marks.trim())           payload.marks           = values.marks.trim();
-    if (values.grade.trim())           payload.grade           = values.grade.trim();
+    if (values.duration.trim())  payload.duration = values.duration.trim();
+    if (values.marks.trim())     payload.marks    = values.marks.trim();
+    if (values.grade.trim())     payload.grade    = values.grade.trim();
 
     // Pass the File (or null) as the second argument
     onSubmit(payload, photoFile);
@@ -263,15 +278,35 @@ export default function CertificateForm({
           />
         </Field>
 
-        {/* Course Name */}
+        {/* Course Name — dropdown from COURSES list */}
         <Field label="Course Name" required error={errors.courseName}>
-          <input
-            type="text"
-            value={values.courseName}
-            onChange={e => set('courseName', e.target.value)}
-            placeholder="e.g. MS-CIT"
+          <select
+            value={CERT_COURSE_OPTIONS.includes(values.courseName) ? values.courseName : (values.courseName ? 'Other' : '')}
+            onChange={e => {
+              if (e.target.value === 'Other') {
+                set('courseName', '');
+              } else {
+                set('courseName', e.target.value);
+              }
+            }}
             className={inputCls(errors.courseName)}
-          />
+          >
+            <option value="">Select course…</option>
+            {CERT_COURSE_OPTIONS.map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+          {/* Show text input when "Other" is chosen or when the saved value isn't in the list */}
+          {(values.courseName && !CERT_COURSE_OPTIONS.filter(c => c !== 'Other').includes(values.courseName)) && (
+            <input
+              type="text"
+              value={values.courseName}
+              onChange={e => set('courseName', e.target.value)}
+              placeholder="Type custom course name…"
+              className={`${inputCls(errors.courseName)} mt-2`}
+              autoFocus
+            />
+          )}
         </Field>
 
         {/* Exam Date */}
@@ -284,14 +319,18 @@ export default function CertificateForm({
           />
         </Field>
 
-        {/* Institution Name */}
-        <Field label="Institution Name" error={errors.institutionName}>
+        {/* Institution Name — auto-filled, read-only display */}
+        <Field
+          label="Institution Name"
+          hint="Auto-filled — always Master Computer Academy"
+          error={errors.institutionName}
+        >
           <input
             type="text"
             value={values.institutionName}
-            onChange={e => set('institutionName', e.target.value)}
-            placeholder="Master Computer Academy"
-            className={inputCls(errors.institutionName)}
+            readOnly
+            className={`${inputCls(errors.institutionName)} bg-slate-50 text-slate-600 cursor-not-allowed`}
+            aria-readonly="true"
           />
         </Field>
 

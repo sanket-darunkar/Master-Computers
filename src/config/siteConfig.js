@@ -433,6 +433,19 @@ export const COURSES = [
     fees: null,
     shortDesc: 'GCC-TBC Pune Board Typing — English, Marathi किंवा Hindi मधून एक combination निवडा.',
   },
+  // ── Diploma ───────────────────────────────────────────────
+  {
+    id: 'diploma',
+    category: 'computer',
+    icon: '🎓',
+    name: 'DIPLOMA',
+    nameMarathi: 'डिप्लोमा',
+    badge: 'Diploma',
+    isCombo: false,
+    duration: null,
+    fees: null,
+    shortDesc: 'Diploma in Computer Applications — comprehensive computer skills diploma program.',
+  },
 ];
 
 // ── Reviews (add real reviews from verified students) ───────

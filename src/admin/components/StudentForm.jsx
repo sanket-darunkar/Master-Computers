@@ -145,7 +145,14 @@ export default function StudentForm({
   const [v, setV]         = useState({ ...EMPTY, ...normalised });
   const [errs, setErrs]   = useState({});
   const [photo, setPhoto] = useState(null);          // File object
-  const [preview, setPrev] = useState(initialValues?.studentPhotoUrl || '');
+  // Build initial preview from all three possible sources (same priority as cert form)
+  const [preview, setPrev] = useState(() => {
+    if (!initialValues) return '';
+    if (initialValues.photoData && initialValues.photoMimeType) {
+      return `data:${initialValues.photoMimeType};base64,${initialValues.photoData}`;
+    }
+    return initialValues.studentPhotoUrl || '';
+  });
   const fileRef           = useRef(null);
 
   const set = (field, value) => {
