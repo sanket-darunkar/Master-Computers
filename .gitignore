@@ -1,17 +1,16 @@
 # ── Dependencies ──────────────────────────────────────────────
 node_modules/
 
-# ── Build output — never commit the build artefacts ───────────
-# The production build is deployed from dist/ directly to the host,
-# it must not be in version control.
-dist/
+# ── Build output ──────────────────────────────────────────────
+# dist/ is committed so Hostinger can serve it directly without a build step.
+# dist/
 
-# ── Environment files — NEVER commit real secrets ─────────────
+# ── Environment files ─────────────────────────────────────────
 .env
 .env.local
 .env.*.local
 .env.development
-.env.production
+# .env.production is committed — contains only the public API URL, no secrets
 # Keep .env.example (no secrets — just variable names + comments)
 
 # ── OS / Editor artefacts ─────────────────────────────────────

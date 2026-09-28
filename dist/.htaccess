@@ -1,0 +1,14 @@
+# Apache SPA fallback — used when hosting on Apache (cPanel, shared hosting, etc.)
+# Rewrites all non-file, non-directory requests to index.html so the
+# React app can handle client-side routing for:
+#   /certificate-verification
+#   /certificate-verification?certificate=MCA-XXXX
+#   /admin/login
+#   /admin/dashboard
+#   /admin/certificates (and all sub-paths)
+
+Options -MultiViews
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ /index.html [L]

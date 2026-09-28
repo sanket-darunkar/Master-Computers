@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="igRed" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#ff2200"/>
+      <stop offset="100%" stop-color="#990000"/>
+    </linearGradient>
+    <linearGradient id="igOrange" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#ffb300"/>
+      <stop offset="100%" stop-color="#e65c00"/>
+    </linearGradient>
+    <linearGradient id="igFig" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#ffe082"/>
+      <stop offset="100%" stop-color="#ff8f00"/>
+    </linearGradient>
+    <linearGradient id="igGlobe" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#ffd740"/>
+      <stop offset="100%" stop-color="#ff8f00"/>
+    </linearGradient>
+    <filter id="ifShadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#00000035"/>
+    </filter>
+  </defs>
+
+  <!-- White background circle -->
+  <circle cx="100" cy="100" r="98" fill="white" stroke="#eeeeee" stroke-width="1"/>
+
+  <!-- Red swoosh arc -->
+  <path d="M 118 175 C 30 155, 5 88, 50 35 C 65 16, 86 8, 102 10
+           C 86 20, 72 40, 70 65 C 64 98, 82 130, 118 150 Z"
+        fill="url(#igRed)" opacity="0.9"/>
+
+  <!-- Monitor -->
+  <rect x="52" y="96" width="76" height="56" rx="5" fill="url(#igRed)" filter="url(#ifShadow)"/>
+  <rect x="56" y="100" width="68" height="46" rx="3" fill="#0c0c1e"/>
+  <rect x="58" y="102" width="64" height="42" rx="2" fill="#101020"/>
+  <!-- Screen lines -->
+  <rect x="62" y="109" width="26" height="4" rx="2" fill="#ff6600" opacity="0.8"/>
+  <rect x="62" y="117" width="50" height="2" rx="1" fill="#ffffff" opacity="0.3"/>
+  <rect x="62" y="122" width="40" height="2" rx="1" fill="#ffffff" opacity="0.25"/>
+  <rect x="62" y="127" width="46" height="2" rx="1" fill="#ffffff" opacity="0.25"/>
+  <rect x="62" y="132" width="28" height="2" rx="1" fill="#ff9800" opacity="0.5"/>
+  <!-- Stand -->
+  <rect x="84" y="152" width="12" height="10" rx="2" fill="#880000"/>
+  <rect x="72" y="161" width="36" height="6" rx="3" fill="#770000"/>
+
+  <!-- Mouse cable + mouse -->
+  <path d="M 98 167 C 98 175, 112 176, 124 173 C 136 170, 143 175, 143 181
+           C 143 186, 139 189, 135 188 C 131 187, 129 183, 129 179"
+        fill="none" stroke="url(#igOrange)" stroke-width="2.5" stroke-linecap="round"/>
+  <ellipse cx="136" cy="183" rx="11" ry="8" fill="url(#igOrange)" filter="url(#ifShadow)"/>
+  <line x1="136" y1="175" x2="136" y2="191" stroke="#c44d00" stroke-width="1" opacity="0.5"/>
+  <ellipse cx="136" cy="180" rx="2.5" ry="3.5" fill="#ffe082" opacity="0.6"/>
+
+  <!-- Graduation figure -->
+  <circle cx="93" cy="68" r="9" fill="url(#igFig)" filter="url(#ifShadow)"/>
+  <!-- Torso -->
+  <path d="M 89 76 C 86 86, 84 96, 84 104 C 84 109, 87 112, 91 112
+           C 95 112, 99 109, 99 104 C 99 96, 97 86, 94 76 Z" fill="url(#igFig)"/>
+  <!-- Left arm up -->
+  <path d="M 89 79 C 84 72, 79 63, 78 55 C 77 50, 79 46, 82 47
+           C 85 48, 85 55, 86 62 C 87 69, 88 75, 89 79 Z" fill="url(#igFig)"/>
+  <!-- Right arm down -->
+  <path d="M 94 80 C 99 87, 106 94, 108 101 C 110 107, 107 111, 104 110
+           C 101 109, 100 104, 98 98 C 96 92, 95 86, 94 80 Z" fill="url(#igFig)"/>
+
+  <!-- Cap -->
+  <ellipse cx="93" cy="61" rx="13" ry="4" fill="#aa0000"/>
+  <rect x="87" y="57" width="12" height="6" rx="2" fill="#cc0000"/>
+  <!-- Tassel -->
+  <line x1="105" y1="61" x2="108" y2="68" stroke="#ffd740" stroke-width="1.8" stroke-linecap="round"/>
+  <circle cx="108" cy="70" r="2.5" fill="#ffd740"/>
+
+  <!-- Globe -->
+  <circle cx="80" cy="42" r="14" fill="url(#igGlobe)" filter="url(#ifShadow)"/>
+  <ellipse cx="80" cy="42" rx="14" ry="6"  fill="none" stroke="white" stroke-width="0.8" opacity="0.5"/>
+  <ellipse cx="80" cy="42" rx="6"  rx="6" ry="14" fill="none" stroke="white" stroke-width="0.8" opacity="0.5"/>
+  <ellipse cx="80" cy="42" rx="7"  ry="14" fill="none" stroke="white" stroke-width="0.8" opacity="0.45"/>
+  <line x1="66" y1="42" x2="94" y2="42" stroke="white" stroke-width="0.8" opacity="0.4"/>
+  <!-- Continent -->
+  <path d="M 75 33 C 78 30, 84 31, 86 34 C 88 37, 85 41, 82 40
+           C 79 39, 74 37, 75 33 Z" fill="white" opacity="0.55"/>
+  <!-- Shine -->
+  <ellipse cx="76" cy="37" rx="4" ry="3" fill="white" opacity="0.22" transform="rotate(-15 76 37)"/>
+
+  <!-- "M" letter mark at bottom right of icon -->
+  <text x="108" y="120"
+        font-family="Georgia, serif"
+        font-size="36"
+        font-weight="900"
+        fill="url(#igRed)"
+        opacity="0.15">M</text>
+
+  <!-- Text: MCA compact -->
+  <text x="100" y="144"
+        font-family="'Arial Black', Arial, sans-serif"
+        font-size="11"
+        font-weight="900"
+        fill="url(#igRed)"
+        text-anchor="middle"
+        letter-spacing="1">MASTER</text>
+  <text x="100" y="158"
+        font-family="'Arial Black', Arial, sans-serif"
+        font-size="9"
+        font-weight="900"
+        fill="url(#igOrange)"
+        text-anchor="middle"
+        letter-spacing="1.5">COMPUTER ACADEMY</text>
+</svg>
