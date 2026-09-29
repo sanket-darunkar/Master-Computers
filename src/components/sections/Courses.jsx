@@ -6,8 +6,7 @@ import WhatsAppButton from '../ui/WhatsAppButton';
 import { COURSES, COURSE_CATEGORIES, waLink, waCourseMsg } from '../../config/siteConfig';
 
 // ── Duration filter options derived from data ──────────────
-const ALL_DURATIONS = [...new Set(COURSES.map(c => c.duration).filter(Boolean))].sort();
-const DURATION_OPTIONS = ['All', ...ALL_DURATIONS];
+const DURATION_OPTIONS = ['All', '2 Months', '3 Months', '5 Months', '6 Months', '8 Months'];
 
 const WhatsAppIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -193,7 +192,7 @@ export default function Courses() {
   return (
     <SectionWrapper id="courses" bg="alt">
       <SectionHeading
-        label={`${COURSES.length} Courses`}
+        label="25 Courses"
         title="तुमच्यासाठी योग्य Course निवडा"
         subtitle="MS-CIT, Accounting, Design, Typing आणि बरेच काही — सर्व levels साठी courses उपलब्ध."
       />
