@@ -22,7 +22,8 @@
  */
 
 import React, { useState, useRef, useCallback } from 'react';
-import { COURSES } from '../../config/siteConfig';
+import { ADMIN_COURSES_UNIQUE } from '../../data/adminCourses';
+import { CourseSingleSelect } from './CourseSearchSelect';
 
 const ACCEPTED_MIME    = ['image/jpeg', 'image/png'];
 const ACCEPTED_ACCEPT  = '.jpg,.jpeg,.png';
@@ -30,11 +31,8 @@ const MAX_BYTES        = 2 * 1024 * 1024; // 2 MB
 
 const INSTITUTION_NAME = 'MASTER COMPUTER ACADEMY';
 
-// Course options: all COURSES from siteConfig + a custom/other entry
-const CERT_COURSE_OPTIONS = [
-  ...COURSES.map(c => c.name),
-  'Other',
-];
+// Course options: all 317 courses from adminCourses.js (admin-only)
+const CERT_COURSE_OPTIONS = ADMIN_COURSES_UNIQUE;
 
 const EMPTY = {
   certificateNumber : '',
@@ -278,35 +276,15 @@ export default function CertificateForm({
           />
         </Field>
 
-        {/* Course Name — dropdown from COURSES list */}
+        {/* Course Name — searchable typeahead from full 317-course list */}
         <Field label="Course Name" required error={errors.courseName}>
-          <select
-            value={CERT_COURSE_OPTIONS.includes(values.courseName) ? values.courseName : (values.courseName ? 'Other' : '')}
-            onChange={e => {
-              if (e.target.value === 'Other') {
-                set('courseName', '');
-              } else {
-                set('courseName', e.target.value);
-              }
-            }}
-            className={inputCls(errors.courseName)}
-          >
-            <option value="">Select course…</option>
-            {CERT_COURSE_OPTIONS.map(c => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-          {/* Show text input when "Other" is chosen or when the saved value isn't in the list */}
-          {(values.courseName && !CERT_COURSE_OPTIONS.filter(c => c !== 'Other').includes(values.courseName)) && (
-            <input
-              type="text"
-              value={values.courseName}
-              onChange={e => set('courseName', e.target.value)}
-              placeholder="Type custom course name…"
-              className={`${inputCls(errors.courseName)} mt-2`}
-              autoFocus
-            />
-          )}
+          <CourseSingleSelect
+            options={CERT_COURSE_OPTIONS}
+            value={values.courseName}
+            onChange={val => set('courseName', val)}
+            error={errors.courseName}
+            placeholder="Search and select course…"
+          />
         </Field>
 
         {/* Exam Date */}

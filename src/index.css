@@ -193,63 +193,94 @@
 
 /* ─────────────────────────────────────────────────────────────
    STUDENT PRINT STYLES
-   Two A4 pages: Page 1 = Admission Form, Page 2 = Exam Form
+   Two A4 pages: Page 1 = Application Form, Page 2 = Exam Form
 
    HOW IT WORKS:
    StudentPrint.jsx renders #student-print-doc with inline
    style={{ display:'none' }} (NOT Tailwind `hidden` which uses
-   display:none !important and cannot be overridden by @media print).
+   display:none !important and CANNOT be overridden by @media print).
    The screen overlay uses print:hidden so it disappears.
+
+   Portal to document.body ensures #student-print-doc is a DIRECT
+   body child — the rule below shows it while hiding #root and all else.
 ───────────────────────────────────────────────────────────── */
 @media print {
-  /* 1. Hide every direct child of body */
+  /* ── 1. Hide every direct body child (including #root / admin app) ── */
   body > * {
     display: none !important;
   }
 
-  /* 2. Show #student-print-doc — it is a direct child of body
-        because it is rendered inside the fixed overlay portal.
-        Higher specificity + later declaration wins over the rule above. */
+  /* ── 2. Show the print document ── */
   body > #student-print-doc,
   #student-print-doc {
     display: block !important;
-    position: static !important;   /* NOT fixed — fixed clips to one viewport */
-    width: auto !important;
+    position: static !important;  /* NOT fixed — fixed clips to one viewport page */
+    width: 210mm !important;
     height: auto !important;
     overflow: visible !important;
     margin: 0 !important;
     padding: 0 !important;
+    background: white !important;
   }
 
-  /* 3. Each page fills one A4 sheet */
+  /* ── 3. Page layout ── */
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  /* ── 4. Each .print-page = one A4 sheet ── */
   .print-page {
     width: 210mm;
-    padding: 10mm 12mm;
+    min-height: 297mm;
+    padding: 9mm 11mm;
     box-sizing: border-box;
     page-break-after: always;
-    /* NO page-break-inside:avoid — it prevents Chrome from paginating */
+    /* NO page-break-inside:avoid — prevents Chrome paginating across full A4 height */
     background: white !important;
     font-size: 8.5pt;
-    font-family: Arial, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     color: #111;
     display: block !important;
+    position: relative;
   }
 
   .print-page:last-child {
     page-break-after: auto;
   }
 
-  @page {
-    size: A4 portrait;
-    margin: 0;
-  }
-
-  /* Force colour/background printing */
+  /* ── 5. Force background + colour printing (tables, headers, badges) ── */
   .print-page,
   .print-page * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
+  }
+
+  /* ── 6. Remove any box-shadows or transitions that bleed through ── */
+  .print-page * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+
+  /* ── 7. Ensure tables never collapse incorrectly ── */
+  .print-page table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  .print-page td,
+  .print-page th {
+    overflow: visible !important;
+    word-break: break-word;
+  }
+
+  /* ── 8. Images in photo box always fill box exactly ── */
+  .print-page img {
+    display: block !important;
+    max-width: 100% !important;
   }
 }
 

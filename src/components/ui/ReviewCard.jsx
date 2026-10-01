@@ -36,7 +36,7 @@ export default function ReviewCard({ review }) {
           <img
             src={photo}
             alt={`Photo of ${name}`}
-            className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 border-primary-100"
+            className="w-10 h-10 rounded-full object-cover object-top flex-shrink-0 border-2 border-primary-100"
             loading="lazy"
             onError={() => setImgError(true)}
           />

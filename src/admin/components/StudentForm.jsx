@@ -14,9 +14,10 @@
  *   onCancel
  */
 import React, { useRef, useState } from 'react';
-import { COURSES } from '../../config/siteConfig';
+import { ADMIN_COURSES_UNIQUE } from '../../data/adminCourses';
+import { CourseMultiSelect } from './CourseSearchSelect';
 
-const COURSE_OPTIONS = COURSES.map(c => c.name);
+const COURSE_OPTIONS = ADMIN_COURSES_UNIQUE;
 
 const GENDERS   = ['Male', 'Female', 'Other'];
 const MARITAL   = ['Single', 'Married', 'Divorced', 'Widowed'];
@@ -61,50 +62,8 @@ function SectionTitle({ children }) {
   );
 }
 
-/**
- * CourseCheckList — multi-select checklist for courses.
- * Renders a scrollable list of checkboxes, one per course option.
- */
-function CourseCheckList({ options, selected, onChange, error }) {
-  const toggle = (courseName) => {
-    const next = selected.includes(courseName)
-      ? selected.filter(c => c !== courseName)
-      : [...selected, courseName];
-    onChange(next);
-  };
-
-  return (
-    <div>
-      <div className={`max-h-48 overflow-y-auto rounded-xl border bg-gray-50 divide-y divide-gray-100
-        ${error ? 'border-red-300' : 'border-gray-200'}`}>
-        {options.map(course => {
-          const checked = selected.includes(course);
-          return (
-            <label
-              key={course}
-              className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-primary-50
-                          transition-colors duration-100 select-none text-sm
-                          ${checked ? 'bg-primary-50 text-primary-800 font-semibold' : 'text-gray-700'}`}
-            >
-              <input
-                type="checkbox"
-                checked={checked}
-                onChange={() => toggle(course)}
-                className="w-4 h-4 rounded accent-primary-600 flex-shrink-0"
-              />
-              {course}
-            </label>
-          );
-        })}
-      </div>
-      {selected.length > 0 && (
-        <p className="text-xs text-primary-600 mt-1 font-semibold">
-          {selected.length} course{selected.length > 1 ? 's' : ''} selected
-        </p>
-      )}
-    </div>
-  );
-}
+// CourseCheckList is replaced by CourseMultiSelect (imported above).
+// Kept as a no-op to avoid hard-to-spot "still used" references.
 
 function Field({ label, required, hint, error, className = '', children }) {
   return (
@@ -362,8 +321,8 @@ export default function StudentForm({
       {/* ── ADMISSION ──────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 mb-6">
         <SectionTitle>Admission Details</SectionTitle>
-        <Field label="Course(s)" required error={errs.courses} hint="Select one or more courses" className="sm:col-span-2">
-          <CourseCheckList
+        <Field label="Course(s)" required error={errs.courses} hint="Type to search, select one or more courses" className="sm:col-span-2">
+          <CourseMultiSelect
             options={COURSE_OPTIONS}
             selected={v.courses}
             onChange={val => set('courses', val)}

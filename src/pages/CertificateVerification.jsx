@@ -16,6 +16,37 @@ const IconUser        = () => <svg width="52" height="52" viewBox="0 0 24 24" fi
 const IconCert        = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>;
 
 // ─────────────────────────────────────────────────────────────
+// PHOTO BOX — consistent passport-style student photo display
+// Fixed 112×136 px (portrait ratio). Works for any image size.
+// ─────────────────────────────────────────────────────────────
+function PhotoBox({ photoSrc, altName }) {
+  const [broken, setBroken] = React.useState(false);
+  const showImg = photoSrc && !broken;
+
+  return (
+    <div
+      className="rounded-xl overflow-hidden border-2 border-primary-100 shadow-card bg-primary-50 flex items-center justify-center flex-shrink-0"
+      style={{ width: '112px', height: '136px', minWidth: '112px' }}
+      aria-label={showImg ? `Photo of ${altName}` : 'No photo available'}
+    >
+      {showImg ? (
+        <img
+          src={photoSrc}
+          alt={`Photo of ${altName}`}
+          className="w-full h-full object-cover object-top"
+          loading="lazy"
+          onError={() => setBroken(true)}
+        />
+      ) : (
+        <span className="text-primary-300" aria-hidden="true">
+          <IconUser />
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // PAGE STATE ENUM
 // ─────────────────────────────────────────────────────────────
 const State = Object.freeze({
@@ -66,7 +97,8 @@ function DetailRow({ label, value, highlight = false }) {
       <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide sm:w-44 flex-shrink-0 pt-0.5">
         {label}
       </span>
-      <span className="text-sm font-semibold text-gray-900 flex-1">{value}</span>
+      {/* break-words ensures long course names / certificate numbers never overflow */}
+      <span className="text-sm font-semibold text-gray-900 flex-1 break-words min-w-0">{value}</span>
     </div>
   );
 }
@@ -140,28 +172,20 @@ function ValidCertificate({ cert }) {
         <div className="p-6 sm:p-8">
           {/* Student photo + name */}
           <div className="flex flex-col sm:flex-row gap-6 items-start mb-6">
+            {/* Passport-style fixed photo box — works for any image dimension */}
             <div className="flex-shrink-0">
-              {hasPhoto ? (
-                <img
-                  src={photoSrc}
-                  alt={`Photo of ${cert.studentName}`}
-                  className="w-24 h-24 rounded-2xl object-cover border-2 border-primary-100 shadow-card"
-                  loading="lazy"
-                  onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'flex'; }}
-                />
-              ) : null}
-              <div
-                className={`w-24 h-24 rounded-2xl bg-primary-50 border-2 border-primary-100 flex items-center justify-center text-primary-300 ${hasPhoto ? 'hidden' : 'flex'}`}
-                aria-hidden="true"
-              >
-                <IconUser />
-              </div>
+              <PhotoBox photoSrc={hasPhoto ? photoSrc : null} altName={cert.studentName} />
             </div>
-
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Student Name</p>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">{cert.studentName}</h2>
-              <p className="text-primary-600 font-semibold mt-1 text-sm">{cert.courseName}</p>
+              {/* break-words + hyphens: auto handles every name length gracefully
+                  - short names: render normally at full size
+                  - medium names: wrap cleanly at word boundaries
+                  - very long single-word names: hyphenate automatically          */}
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight break-words hyphens-auto">
+                {cert.studentName}
+              </h2>
+              <p className="text-primary-600 font-semibold mt-1 text-sm break-words">{cert.courseName}</p>
             </div>
           </div>
 

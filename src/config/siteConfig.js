@@ -481,7 +481,7 @@ export const REVIEWS = [
     course: 'MS-CIT',
     rating: 5,
     review: 'येथील शिक्षण पद्धत अत्यंत प्रभावी आहे. Computer चे basic ते advance सर्व काही शिकवले. MS-CIT certificate मिळाल्यावर नोकरीसाठी खूप उपयोग झाला. Master Computer Academy ला माझ्याकडून 5 stars!',
-    photo: '/images/reviews/mandar-gajbhiye.jpeg',
+    photo: '/images/reviews/new-reviewer.jpeg',
   },
 ];
 
