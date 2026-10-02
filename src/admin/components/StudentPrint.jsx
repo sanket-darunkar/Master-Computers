@@ -45,6 +45,28 @@ function calcAge(dob) {
   return a > 0 && a < 120 ? String(a) : '';
 }
 
+// ── Number to words (Indian Rupees) ──────────────────────────
+function toWords(num) {
+  const n = parseInt(num);
+  if (!n || isNaN(n)) return '';
+
+  const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+    'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
+    'Seventeen', 'Eighteen', 'Nineteen'];
+  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+  function convert(n) {
+    if (n < 20) return ones[n];
+    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+    if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + convert(n % 100) : '');
+    if (n < 100000) return convert(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 ? ' ' + convert(n % 1000) : '');
+    if (n < 10000000) return convert(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 ? ' ' + convert(n % 100000) : '');
+    return convert(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 ? ' ' + convert(n % 10000000) : '');
+  }
+
+  return convert(n) + ' Rupees Only';
+}
+
 // ── Individual digit boxes (Mobile, Aadhaar, PIN only) ────────
 // Box size matched to PDF screenshot: ~18px square, clear 1px border
 const DBOX = {
@@ -458,7 +480,9 @@ function FormPage({ student: s, isExam }) {
                   {v(s.totalFees)}
                 </span>
                 &nbsp;(In Words)&nbsp;
-                <span style={{ borderBottom: '1px solid #555', display: 'inline-block', minWidth: '45mm' }}>&nbsp;</span>
+                <span style={{ borderBottom: '1px solid #555', display: 'inline-block', minWidth: '45mm' }}>
+                  {toWords(s.totalFees)}
+                </span>
                 <br />
                 <span style={{ fontSize: '6.5pt', color: '#333' }}>
                   For Full Course And These Are Not To Be Refunded Under Any Circumstances.
