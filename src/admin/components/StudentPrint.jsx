@@ -154,7 +154,16 @@ function TextField({ label, value }) {
 function FormPage({ student: s, isExam }) {
   const fullName  = [s.firstName, s.middleName, s.surname].filter(Boolean).join(' ');
   const age       = calcAge(s.dateOfBirth);
-  const balance   = (parseFloat(s.totalFees) || 0) - (parseFloat(s.feesPaid) || 0);
+
+  // Build installments list — use new array, fall back to legacy flat fields
+  const installments = Array.isArray(s.installments) && s.installments.length > 0
+    ? s.installments
+    : (s.feesPaid || s.receiptNumber || s.receiptDate)
+      ? [{ amountPaid: s.feesPaid, receiptNumber: s.receiptNumber, receiptDate: s.receiptDate }]
+      : [];
+
+  const totalPaid = installments.reduce((sum, i) => sum + (parseFloat(i.amountPaid) || 0), 0);
+  const balance   = (parseFloat(s.totalFees) || 0) - totalPaid;
   const photo     = resolvePhoto(s);
   const courseStr = Array.isArray(s.courses) && s.courses.length > 0
     ? s.courses.join(', ')
@@ -478,8 +487,7 @@ function FormPage({ student: s, isExam }) {
                 I Agree To Pay Rs.&nbsp;
                 <span style={{ borderBottom: '1px solid #555', display: 'inline-block', minWidth: '20mm' }}>
                   {v(s.totalFees)}
-                </span>
-                &nbsp;(In Words)&nbsp;
+                </span>                &nbsp;(In Words)&nbsp;
                 <span style={{ borderBottom: '1px solid #555', display: 'inline-block', minWidth: '45mm' }}>
                   {toWords(s.totalFees)}
                 </span>
@@ -575,7 +583,7 @@ function FormPage({ student: s, isExam }) {
 
       {/* ════════════════════════════════════════════
           SECTION 6A — FEES INSTALLMENT TABLE (Application only)
-          Dark header (4 cols) + 1 filled data row + 9 blank rows
+          Dark header (4 cols) + filled rows for each installment + blank rows to fill 10 total
       ════════════════════════════════════════════ */}
       {!isExam && (
         <table style={{ width: '100%', borderCollapse: 'collapse', border: B_OUTER, borderTop: 'none' }}>
@@ -593,16 +601,24 @@ function FormPage({ student: s, isExam }) {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td style={{ ...C, fontSize: '8pt', fontWeight: 700, height: 17 }}>{v(s.feesPaid)}</td>
-              <td style={{ ...C, fontSize: '8pt', height: 17 }}>{v(s.receiptNumber)}</td>
-              <td style={{ ...C, fontSize: '8pt', height: 17 }}>{fmtDate(s.receiptDate)}</td>
-              <td style={{ ...C, fontSize: '8pt', fontWeight: 700, height: 17 }}>
-                {s.totalFees ? Math.round(balance) : ''}
-              </td>
-            </tr>
-            {Array.from({ length: 9 }).map((_, i) => (
-              <tr key={i}>
+            {/* Filled rows — one per installment, with running balance */}
+            {installments.map((inst, idx) => {
+              const paidSoFar = installments.slice(0, idx + 1).reduce((sum, i) => sum + (parseFloat(i.amountPaid) || 0), 0);
+              const runningBalance = (parseFloat(s.totalFees) || 0) - paidSoFar;
+              return (
+                <tr key={idx}>
+                  <td style={{ ...C, fontSize: '8pt', fontWeight: 700, height: 17 }}>{inst.amountPaid || ''}</td>
+                  <td style={{ ...C, fontSize: '8pt', height: 17 }}>{inst.receiptNumber || ''}</td>
+                  <td style={{ ...C, fontSize: '8pt', height: 17 }}>{fmtDate(inst.receiptDate)}</td>
+                  <td style={{ ...C, fontSize: '8pt', fontWeight: 700, height: 17 }}>
+                    {s.totalFees ? Math.round(runningBalance) : ''}
+                  </td>
+                </tr>
+              );
+            })}
+            {/* Blank rows to always total 10 rows */}
+            {Array.from({ length: Math.max(0, 10 - installments.length) }).map((_, i) => (
+              <tr key={`blank-${i}`}>
                 <td style={{ ...C, height: 17 }} />
                 <td style={{ ...C, height: 17 }} />
                 <td style={{ ...C, height: 17 }} />

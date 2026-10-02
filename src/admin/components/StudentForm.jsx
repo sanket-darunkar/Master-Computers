@@ -33,9 +33,14 @@ const EMPTY = {
   ownMobile: '', otherMobile: '',
   houseNo: '', street: '', city: '', tahsil: '', district: '', pinCode: '',
   qualification: '', category: '',
-  courses: [], course: '',   // courses[] = multi-select; course = first entry (backward compat)
+  courses: [], course: '',
   admissionDate: '', courseDuration: '', batchTime: '',
-  totalFees: '', feesPaid: '', receiptNumber: '', receiptDate: '',
+  totalFees: '',
+  // installments: array of { amountPaid, receiptNumber, receiptDate }
+  // replaces the old flat feesPaid/receiptNumber/receiptDate fields.
+  // Legacy fields kept for backward compat with existing records.
+  feesPaid: '', receiptNumber: '', receiptDate: '',
+  installments: [],
   examForm: 'Exam Form Pending', notes: '',
 };
 
@@ -51,6 +56,28 @@ function calcBalance(total, paid) {
   const t = parseFloat(total) || 0;
   const p = parseFloat(paid)  || 0;
   return t - p;
+}
+
+/** Build the installments array from initialValues.
+ *  Priority: use installments[] if present, else migrate legacy flat fields. */
+function normaliseInstallments(init) {
+  if (!init) return [];
+  if (Array.isArray(init.installments) && init.installments.length > 0) {
+    return init.installments.map(inst => ({
+      amountPaid:    String(inst.amountPaid    ?? inst.feesPaid ?? ''),
+      receiptNumber: String(inst.receiptNumber ?? ''),
+      receiptDate:   String(inst.receiptDate   ?? ''),
+    }));
+  }
+  // Migrate legacy flat fields into the first installment row
+  if (init.feesPaid || init.receiptNumber || init.receiptDate) {
+    return [{
+      amountPaid:    String(init.feesPaid      ?? ''),
+      receiptNumber: String(init.receiptNumber ?? ''),
+      receiptDate:   String(init.receiptDate   ?? ''),
+    }];
+  }
+  return [];
 }
 
 // ── Sub-components ────────────────────────────────────────────
@@ -100,6 +127,7 @@ export default function StudentForm({
       : initialValues.course
       ? [initialValues.course]
       : [],
+    installments: normaliseInstallments(initialValues),
   } : {};
   const [v, setV]         = useState({ ...EMPTY, ...normalised });
   const [errs, setErrs]   = useState({});
@@ -159,13 +187,16 @@ export default function StudentForm({
 
     const payload = { ...v };
     if (!isEdit) payload.studentId = v.studentId.trim();
-    // Set backward-compat single course field to first selected course
     payload.course = Array.isArray(v.courses) && v.courses.length > 0 ? v.courses[0] : '';
-    // Computed/display-only — don't send to backend
+    // Sync legacy flat fields from first installment (backward compat)
+    const insts = Array.isArray(v.installments) ? v.installments : [];
+    const firstInst = insts[0] || {};
+    payload.feesPaid      = insts.reduce((sum, i) => sum + (parseFloat(i.amountPaid) || 0), 0) || null;
+    payload.receiptNumber = firstInst.receiptNumber || null;
+    payload.receiptDate   = firstInst.receiptDate   || null;
+    // Clean installments — remove empty rows
+    payload.installments  = insts.filter(i => i.amountPaid || i.receiptNumber || i.receiptDate);
     delete payload.balanceAmount;
-    // Per-course exam status is managed via PATCH /{id}/status (AdminStudentDetail),
-    // not the edit form PUT. Remove these so saving student details never
-    // accidentally overwrites individual course statuses.
     delete payload.examForm;
     delete payload.courseExamStatuses;
 
@@ -178,7 +209,9 @@ export default function StudentForm({
   };
 
   const age     = calcAge(v.dateOfBirth);
-  const balance = calcBalance(v.totalFees, v.feesPaid);
+  // Total paid = sum of all installment amountPaid values
+  const totalPaid = (v.installments || []).reduce((sum, inst) => sum + (parseFloat(inst.amountPaid) || 0), 0);
+  const balance = calcBalance(v.totalFees, totalPaid);
 
   return (
     <form onSubmit={handleSubmit} noValidate>
@@ -344,26 +377,120 @@ export default function StudentForm({
       </div>
 
       {/* ── FEES ───────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-4 mb-6">
-        <SectionTitle>Fees</SectionTitle>
-        <Field label="Total Course Fees (₹)" error={errs.totalFees}>
-          <input type="number" min="0" step="1" value={v.totalFees}
-            onChange={e => set('totalFees', e.target.value)} className={inp(errs.totalFees)} placeholder="0" />
-        </Field>
-        <Field label="Fees Paid (₹)" error={errs.feesPaid}>
-          <input type="number" min="0" step="1" value={v.feesPaid}
-            onChange={e => set('feesPaid', e.target.value)} className={inp(errs.feesPaid)} placeholder="0" />
-        </Field>
-        <Field label="Balance Amount (₹)" hint="Auto-calculated">
-          <input type="text" value={v.totalFees || v.feesPaid ? `₹ ${balance.toFixed(0)}` : ''}
-            readOnly className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm bg-gray-100 text-gray-700 font-semibold cursor-not-allowed" />
-        </Field>
-        <Field label="Receipt Number" error={errs.receiptNumber}>
-          <input type="text" value={v.receiptNumber} onChange={e => set('receiptNumber', e.target.value)} className={inp(errs.receiptNumber)} placeholder="RCP-001" />
-        </Field>
-        <Field label="Receipt Date" error={errs.receiptDate}>
-          <input type="date" value={v.receiptDate} onChange={e => set('receiptDate', e.target.value)} className={inp(errs.receiptDate)} />
-        </Field>
+      <div className="mb-6">
+        <div className="border-b border-primary-100 pb-2 mb-4">
+          <h3 className="text-xs font-extrabold text-primary-700 uppercase tracking-widest">Fees</h3>
+        </div>
+
+        {/* Total Fees + Balance */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4 mb-5">
+          <Field label="Total Course Fees (₹)" error={errs.totalFees}>
+            <input type="number" min="0" step="1" value={v.totalFees}
+              onChange={e => set('totalFees', e.target.value)} className={inp(errs.totalFees)} placeholder="0" />
+          </Field>
+          <Field label="Balance Amount (₹)" hint="Auto-calculated from total − installments">
+            <input type="text"
+              value={v.totalFees ? `₹ ${balance.toFixed(0)}` : ''}
+              readOnly
+              className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm bg-gray-100 text-gray-700 font-semibold cursor-not-allowed"
+            />
+          </Field>
+        </div>
+
+        {/* Installments table */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">
+              Fee Installments
+            </label>
+            <span className="text-xs text-primary-600 font-semibold">
+              Total Paid: ₹ {totalPaid.toFixed(0)}
+            </span>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 overflow-hidden">
+            {/* Header */}
+            <div className="grid grid-cols-12 gap-0 bg-gray-100 border-b border-gray-200 text-xs font-bold text-gray-600 uppercase tracking-wide">
+              <div className="col-span-1 px-2 py-2 text-center">#</div>
+              <div className="col-span-3 px-3 py-2">Amount Paid (₹)</div>
+              <div className="col-span-4 px-3 py-2">Receipt No.</div>
+              <div className="col-span-3 px-3 py-2">Receipt Date</div>
+              <div className="col-span-1 px-2 py-2"></div>
+            </div>
+
+            {/* Rows */}
+            {(v.installments || []).map((inst, idx) => (
+              <div key={idx} className="grid grid-cols-12 gap-0 border-b border-gray-100 last:border-0 items-center bg-white hover:bg-gray-50">
+                <div className="col-span-1 px-2 py-1.5 text-center text-xs text-gray-400 font-semibold">{idx + 1}</div>
+                <div className="col-span-3 px-2 py-1.5">
+                  <input
+                    type="number" min="0" step="1"
+                    value={inst.amountPaid}
+                    onChange={e => {
+                      const updated = [...v.installments];
+                      updated[idx] = { ...updated[idx], amountPaid: e.target.value };
+                      set('installments', updated);
+                    }}
+                    className="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white"
+                    placeholder="0"
+                  />
+                </div>
+                <div className="col-span-4 px-2 py-1.5">
+                  <input
+                    type="text"
+                    value={inst.receiptNumber}
+                    onChange={e => {
+                      const updated = [...v.installments];
+                      updated[idx] = { ...updated[idx], receiptNumber: e.target.value };
+                      set('installments', updated);
+                    }}
+                    className="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white"
+                    placeholder="RCP-001"
+                  />
+                </div>
+                <div className="col-span-3 px-2 py-1.5">
+                  <input
+                    type="date"
+                    value={inst.receiptDate}
+                    onChange={e => {
+                      const updated = [...v.installments];
+                      updated[idx] = { ...updated[idx], receiptDate: e.target.value };
+                      set('installments', updated);
+                    }}
+                    className="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white"
+                  />
+                </div>
+                <div className="col-span-1 px-2 py-1.5 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => set('installments', v.installments.filter((_, i) => i !== idx))}
+                    className="w-6 h-6 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                    title="Remove row"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {/* Empty state */}
+            {(!v.installments || v.installments.length === 0) && (
+              <div className="px-4 py-4 text-center text-sm text-gray-400">
+                No installments yet. Click "+ Add Payment" to add one.
+              </div>
+            )}
+          </div>
+
+          {/* Add row button */}
+          <button
+            type="button"
+            onClick={() => set('installments', [...(v.installments || []), { amountPaid: '', receiptNumber: '', receiptDate: '' }])}
+            className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-700 transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Payment
+          </button>
+        </div>
       </div>
 
       {/* ── NOTES ──────────────────────────────────────────── */}

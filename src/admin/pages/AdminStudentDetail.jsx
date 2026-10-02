@@ -122,7 +122,11 @@ export default function AdminStudentDetail({ id }) {
   if (!student) return null;
 
   const fullName = [student.firstName, student.middleName, student.surname].filter(Boolean).join(' ');
-  const balance  = (parseFloat(student.totalFees) || 0) - (parseFloat(student.feesPaid) || 0);
+  // Balance = total − sum of all installment payments (falls back to legacy feesPaid)
+  const totalPaid = Array.isArray(student.installments) && student.installments.length > 0
+    ? student.installments.reduce((s, i) => s + (parseFloat(i.amountPaid) || 0), 0)
+    : parseFloat(student.feesPaid) || 0;
+  const balance  = (parseFloat(student.totalFees) || 0) - totalPaid;
 
   // Build photo src using the same 3-field priority as certificates:
   // 1. Binary blob (photoData + photoMimeType) — most reliable, no network required
@@ -304,11 +308,47 @@ export default function AdminStudentDetail({ id }) {
               } />
             </Section>
             <Section title="Fees">
-              <Row label="Total Fees"     value={student.totalFees ? `₹ ${student.totalFees}` : undefined} />
-              <Row label="Fees Paid"      value={student.feesPaid  ? `₹ ${student.feesPaid}`  : undefined} />
-              <Row label="Balance"        value={student.totalFees ? `₹ ${balance.toFixed(0)}` : undefined} />
-              <Row label="Receipt No."    value={f(student.receiptNumber)} />
-              <Row label="Receipt Date"   value={fmtDate(student.receiptDate)} />
+              <Row label="Total Fees" value={student.totalFees ? `₹ ${student.totalFees}` : undefined} />
+              <Row label="Balance"    value={student.totalFees ? `₹ ${balance.toFixed(0)}` : undefined} />
+              {/* Installments table */}
+              {(() => {
+                const insts = Array.isArray(student.installments) && student.installments.length > 0
+                  ? student.installments
+                  : (student.feesPaid || student.receiptNumber || student.receiptDate)
+                    ? [{ amountPaid: student.feesPaid, receiptNumber: student.receiptNumber, receiptDate: student.receiptDate }]
+                    : [];
+                if (insts.length === 0) return null;
+                const totalPaid = insts.reduce((s, i) => s + (parseFloat(i.amountPaid) || 0), 0);
+                return (
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <p className="admin-detail-label">Installments</p>
+                      <span className="text-xs font-bold text-primary-700">Total Paid: ₹ {totalPaid.toFixed(0)}</span>
+                    </div>
+                    <div className="rounded-xl border border-gray-200 overflow-hidden">
+                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                          <tr style={{ background: '#f1f5f9' }}>
+                            {['#', 'Amount Paid', 'Receipt No.', 'Receipt Date'].map(h => (
+                              <th key={h} style={{ padding: '6px 10px', fontSize: 11, fontWeight: 700, color: '#64748b', textAlign: 'left', borderBottom: '1px solid #e2e8f0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {insts.map((inst, i) => (
+                            <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                              <td style={{ padding: '6px 10px', fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>{i + 1}</td>
+                              <td style={{ padding: '6px 10px', fontSize: 13, fontWeight: 700, color: '#0f172a' }}>₹ {inst.amountPaid || '—'}</td>
+                              <td style={{ padding: '6px 10px', fontSize: 13, color: '#334155' }}>{inst.receiptNumber || '—'}</td>
+                              <td style={{ padding: '6px 10px', fontSize: 13, color: '#334155' }}>{fmtDate(inst.receiptDate)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })()}
             </Section>
           </div>
         </div>
