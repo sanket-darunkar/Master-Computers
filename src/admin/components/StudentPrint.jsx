@@ -188,7 +188,6 @@ function FormPage({ student: s, isExam }) {
               Student ID No{isExam ? ':' : ''}
             </div>
             <div style={{
-              border: B_OUTER, minHeight: 20, padding: '2px 5px',
               fontWeight: 700, fontSize: '9pt', marginBottom: 4,
             }}>
               {v(s.studentId)}
@@ -254,7 +253,7 @@ function FormPage({ student: s, isExam }) {
               <TextField label="First Name:" value={v(s.firstName)} />
             </td>
             {/* Photo box — rowspan 4 */}
-            <td rowSpan={4} style={{ ...C, width: '16%', textAlign: 'center', verticalAlign: 'top', padding: '5px 4px' }}>
+            <td rowSpan={4} style={{ ...C, width: '16%', textAlign: 'center', verticalAlign: 'middle', padding: '5px 4px' }}>
               <div style={{
                 border: '1.5px solid #777',
                 width: 72, height: 90,
