@@ -531,12 +531,16 @@ function FormPage({ student: s, isExam }) {
           <tr>
             <td colSpan={2} style={{ ...C, padding: '3px 7px' }}>
               <span style={{ ...LBL, display: 'inline' }}>Batch Time: </span>
-              <span style={{ ...VAL, display: 'inline', marginRight: 10 }}>{v(s.batchTime)}</span>
+              <span style={{ ...VAL, display: 'inline' }}>{v(s.batchTime)}</span>
+            </td>
+          </tr>
+          <tr>
+            <td colSpan={2} style={{ ...C, padding: '4px 7px', textAlign: 'center' }}>
               <span style={{
                 display: 'inline-block',
                 background: '#1a7a3c', color: '#fff',
-                fontWeight: 700, fontSize: '7pt',
-                padding: '2px 12px', borderRadius: 2, marginLeft: 8,
+                fontWeight: 700, fontSize: '8pt',
+                padding: '3px 24px', borderRadius: 2,
               }}>
                 *FOR OFFICE USE ONLY*
               </span>
