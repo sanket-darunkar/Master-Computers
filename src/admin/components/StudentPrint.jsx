@@ -103,21 +103,25 @@ const VAL = {
   lineHeight: 1.4, display: 'block',
 };
 
-// Underlined text field — used for names (matches PDF visual exactly)
-function TextField({ label, value, underlineWidth = '100%' }) {
+// Rectangle box field — used for names (matches PDF: full bordered rectangle)
+function TextField({ label, value }) {
   return (
     <>
       <span style={LBL}>{label}</span>
-      <span style={{
-        ...VAL,
-        display: 'inline-block',
-        borderBottom: '1px solid #888',
-        width: underlineWidth,
-        minHeight: 13,
-        paddingBottom: 1,
+      <div style={{
+        border: '1px solid #aaa',
+        minHeight: 15,
+        padding: '1px 4px',
+        fontSize: '8.5pt',
+        fontWeight: 700,
+        color: '#111',
+        lineHeight: 1.4,
+        background: '#fff',
+        width: '100%',
+        boxSizing: 'border-box',
       }}>
         {value}
-      </span>
+      </div>
     </>
   );
 }
