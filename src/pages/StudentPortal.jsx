@@ -358,7 +358,7 @@ function StudentDashboard({ student, onLogout }) {
           )}
 
           <div className="flex-1 min-w-0">
-            <h2 className="font-extrabold text-gray-900 text-lg leading-tight truncate">{fullName}</h2>
+            <h2 className="font-extrabold text-gray-900 text-lg leading-tight break-words">{fullName}</h2>
             <p className="text-primary-600 text-xs font-mono font-bold mt-0.5">{student.studentId}</p>
             {student.admissionDate && (
               <p className="text-gray-400 text-xs mt-0.5 font-devanagari">
