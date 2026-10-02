@@ -46,15 +46,17 @@ function calcAge(dob) {
 }
 
 // ── Individual digit boxes (Mobile, Aadhaar, PIN only) ────────
+// Box size matched to PDF screenshot: ~18px square, clear 1px border
 const DBOX = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  width: '14px',
-  height: '14px',
-  border: '1px solid #666',
-  fontSize: '7pt',
+  width: '18px',
+  height: '18px',
+  border: '1px solid #555',
+  fontSize: '8pt',
   fontWeight: 700,
+  color: '#111',
   background: '#fff',
   flexShrink: 0,
   boxSizing: 'border-box',
@@ -63,7 +65,7 @@ const DBOX = {
 function DigitBoxes({ value = '', count }) {
   const chars = String(value).replace(/\D/g, '').split('');
   return (
-    <span style={{ display: 'inline-flex', gap: '1px' }}>
+    <span style={{ display: 'inline-flex', gap: '2px' }}>
       {Array.from({ length: count }).map((_, i) => (
         <span key={i} style={DBOX}>{chars[i] || ''}</span>
       ))}
@@ -74,15 +76,15 @@ function DigitBoxes({ value = '', count }) {
 function AadhaarBoxes({ value = '' }) {
   const digits = String(value).replace(/\D/g, '').padEnd(12, '').split('');
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
       {[0, 1, 2].map(g => (
         <React.Fragment key={g}>
-          <span style={{ display: 'inline-flex', gap: '1px' }}>
+          <span style={{ display: 'inline-flex', gap: '2px' }}>
             {[0, 1, 2, 3].map(j => (
               <span key={j} style={DBOX}>{digits[g * 4 + j] || ''}</span>
             ))}
           </span>
-          {g < 2 && <span style={{ width: 3 }} />}
+          {g < 2 && <span style={{ width: '5px', display: 'inline-block' }} />}
         </React.Fragment>
       ))}
     </span>
@@ -336,36 +338,36 @@ function FormPage({ student: s, isExam }) {
             <td rowSpan={2} style={{ ...C, width: '5%', textAlign: 'center', verticalAlign: 'middle', fontSize: '16pt', padding: '3px' }}>
               📱
             </td>
-            <td style={{ ...C, width: '37%', padding: '3px 6px' }}>
+            <td style={{ ...C, width: '37%', padding: '4px 6px' }}>
               <span style={{ ...LBL, fontWeight: 700 }}>Mobile No. (Own):</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 3 }}>
                 <span style={{ fontSize: '7.5pt', fontWeight: 700 }}>+91</span>
                 <DigitBoxes value={v(s.ownMobile)} count={10} />
               </div>
             </td>
-            <td style={{ ...C, width: '20%', padding: '3px 6px' }}>
+            <td style={{ ...C, width: '20%', padding: '4px 6px' }}>
               <span style={LBL}>Gender:</span>
               <span style={VAL}>{v(s.gender)}</span>
             </td>
             <td style={{ ...C, width: '5%', textAlign: 'center', verticalAlign: 'middle', fontSize: '13pt' }}>
               💞
             </td>
-            <td style={{ ...C, padding: '3px 6px' }}>
+            <td style={{ ...C, padding: '4px 6px' }}>
               <span style={LBL}>Marital Status:</span>
               <span style={VAL}>{v(s.maritalStatus)}</span>
             </td>
           </tr>
           <tr>
-            <td style={{ ...C, padding: '3px 6px' }}>
+            <td style={{ ...C, padding: '4px 6px' }}>
               <span style={LBL}>Mobile No.(Other): WhatsApp</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 3 }}>
                 <span style={{ fontSize: '7.5pt', fontWeight: 700 }}>+91</span>
                 <DigitBoxes value={v(s.otherMobile)} count={10} />
               </div>
             </td>
-            <td colSpan={3} style={{ ...C, padding: '3px 6px' }}>
+            <td colSpan={3} style={{ ...C, padding: '4px 6px' }}>
               <span style={{ ...LBL, fontWeight: 700 }}>Aadhaar Number:</span>
-              <div style={{ marginTop: 3 }}>
+              <div style={{ marginTop: 4 }}>
                 <AadhaarBoxes value={v(s.aadhaarNumber)} />
               </div>
             </td>
@@ -416,9 +418,9 @@ function FormPage({ student: s, isExam }) {
               <span style={LBL}>District:</span>
               <span style={VAL}>{v(s.district)}</span>
             </td>
-            <td style={{ ...C, padding: '3px 6px' }}>
+            <td style={{ ...C, padding: '4px 6px' }}>
               <span style={LBL}>Pin Code</span>
-              <div style={{ marginTop: 3 }}>
+              <div style={{ marginTop: 4 }}>
                 <DigitBoxes value={v(s.pinCode)} count={6} />
               </div>
             </td>
